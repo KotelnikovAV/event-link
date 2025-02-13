@@ -1,0 +1,80 @@
+spring:
+  main:
+    web-application-type: reactive
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+    gateway:
+      discovery.locator.enabled: true
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 10s
+      routes:
+        - id: event_server_circuitbreaker_route
+          uri: lb://event-server
+          predicates:
+            - Path=/admin/events/**, /events/**, /users/{segment}/events/**, /admin/compilations/**, /compilations/**, /admin/categories/**, /categories/**
+          filters:
+            - PrefixPath=/api/v1
+            - CircuitBreaker=EventClient
+        - id: like_circuitbreaker_route
+          uri: lb://like-server
+          predicates:
+            - Path=/event/{segment}/like/**
+          filters:
+            - PrefixPath=/api/v1
+            - CircuitBreaker=LikeClient
+        - id: request_circuitbreaker_route
+          uri: lb://request-server
+          predicates:
+            - Path=/users/{segment}/requests/**
+          filters:
+            - PrefixPath=/api/v1
+            - CircuitBreaker=RequestClient
+        - id: user_server_circuitbreaker_route
+          uri: lb://user-server
+          predicates:
+            - Path=/admin/users/**
+          filters:
+            - PrefixPath=/api/v1
+            - CircuitBreaker=UserClient
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      EventClient:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 2000
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      LikeClient:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      RequestClient:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      UserClient:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+server:
+  port: 8080

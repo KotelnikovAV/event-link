@@ -7,15 +7,21 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.0</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
 
     <name>Event Link</name>
 
-    <groupId>ru.practicum</groupId>
-    <artifactId>explore-with-me</artifactId>
+    <groupId>ru.eventlink</groupId>
+    <artifactId>event-link</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
+
+    <modules>
+        <module>infra</module>
+        <module>stats</module>
+        <module>core</module>
+    </modules>
 
     <properties>
         <java.version>21</java.version>

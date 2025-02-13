@@ -1,0 +1,53 @@
+grpc:
+  server:
+    port: 0
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  sql:
+    init:
+      mode: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/analyzer-server
+    username: root
+    password: root
+
+logging:
+  level:
+    "org.springframework.orm.jpa": INFO
+    "org.springframework.transaction": INFO
+    "org.springframework.transaction.interceptor": TRACE
+    "org.springframework.orm.jpa.JpaTransactionManager": DEBUG
+
+analyzer:
+  kafka:
+    consumer:
+      events-similarity:
+        properties:
+          "bootstrap.servers": kafka:29092
+          "client.id": Consumer-1
+          "group.id": some.group.1
+          "value.deserializer": deserializer.EventSimilarityAvroDeserializer
+          "max.poll.records": 100
+          "enable.auto.commit": false
+        topics:
+          events_similarity: stats.events-similarity.v1
+        consumeAttemptTimeout: 5000
+      user-actions:
+        properties:
+          "bootstrap.servers": kafka:29092
+          "client.id": Consumer-2
+          "group.id": some.group.2
+          "value.deserializer": deserializer.UserActionsAvroDeserializer
+          "max.poll.records": 100
+          "enable.auto.commit": false
+        topics:
+          user_actions: stats.user-actions.v1
+        consumeAttemptTimeout: 5000

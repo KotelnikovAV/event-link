@@ -1,0 +1,16 @@
+grpc:
+  server:
+    port: 0
+
+collector:
+  kafka:
+    producer:
+      properties:
+        "bootstrap.servers": kafka:29092
+        "value.serializer": serializer.UserActionSerializer
+        "key.serializer": org.apache.kafka.common.serialization.StringSerializer
+        "batch.size": 1000
+        "linger.ms": 2000
+      topics:
+        user_actions: stats.user-actions.v1
+      timeUntilClosingKafkaProducerMs: 10000
