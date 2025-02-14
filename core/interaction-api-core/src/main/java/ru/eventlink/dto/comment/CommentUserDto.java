@@ -1,10 +1,11 @@
-package ru.eventlink.dto.user;
+package ru.eventlink.dto.comment;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @AllArgsConstructor
@@ -12,20 +13,22 @@ import java.util.Objects;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserShortDto {
+public class CommentUserDto {
     @NotNull
-    Long id;
+    Long authorId;
     @NotBlank
-    String name;
+    String text;
+    @NotNull
+    LocalDateTime creationDate;
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof UserShortDto that)) return false;
-        return Objects.equals(id, that.id);
+        if (!(o instanceof CommentUserDto that)) return false;
+        return Objects.equals(authorId, that.authorId) && Objects.equals(creationDate, that.creationDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hash(authorId, creationDate);
     }
 }
