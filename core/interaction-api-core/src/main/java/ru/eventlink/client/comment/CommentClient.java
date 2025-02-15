@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.eventlink.dto.comment.CommentDto;
 import ru.eventlink.dto.comment.CommentUserDto;
 import ru.eventlink.dto.comment.RequestCommentDto;
-import ru.eventlink.dto.comment.SubCommentDto;
 import ru.eventlink.fallback.comment.CommentFallback;
 
 import java.util.List;
@@ -27,7 +26,6 @@ public interface CommentClient {
     CommentDto updateComment(@PathVariable String commentId, @RequestBody @Valid RequestCommentDto commentDto);
 
     @PostMapping("/api/v1/events/{eventId}/comments/{commentId}")
-    SubCommentDto addSubComment(@PathVariable @Positive Long eventId,
-                                @PathVariable String commentId,
-                                @RequestBody @Valid RequestCommentDto commentDto);
+    CommentDto addSubComment(@PathVariable(name = "commentId") String parentCommentId,
+                             @RequestBody @Valid RequestCommentDto commentDto);
 }

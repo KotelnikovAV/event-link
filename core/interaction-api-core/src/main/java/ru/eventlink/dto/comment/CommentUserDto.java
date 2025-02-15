@@ -20,6 +20,8 @@ public class CommentUserDto {
     String text;
     @NotNull
     LocalDateTime creationDate;
+    @NotNull
+    LocalDateTime updateDate;
 
     @Override
     public boolean equals(Object o) {

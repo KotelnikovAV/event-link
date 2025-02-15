@@ -4,7 +4,6 @@ import ru.eventlink.client.comment.CommentClient;
 import ru.eventlink.dto.comment.CommentDto;
 import ru.eventlink.dto.comment.CommentUserDto;
 import ru.eventlink.dto.comment.RequestCommentDto;
-import ru.eventlink.dto.comment.SubCommentDto;
 import ru.eventlink.exception.ServerUnavailableException;
 
 import java.util.List;
@@ -31,7 +30,7 @@ public class CommentFallback implements CommentClient {
     }
 
     @Override
-    public SubCommentDto addSubComment(Long eventId, String commentId, RequestCommentDto commentDto) {
+    public CommentDto addSubComment(String parentCommentId, RequestCommentDto commentDto) {
         throw new ServerUnavailableException("Endpoint /api/v1/events/{eventId}/comments/{commentId} method POST is unavailable");
     }
 }

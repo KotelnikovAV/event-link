@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.utility.Constants;
 
 import java.time.LocalDateTime;
@@ -25,11 +26,13 @@ public class CommentDto {
     Long authorId;
     @NotBlank
     String text;
-    Set<SubCommentDto> subComments;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = Constants.DATE_TIME_FORMAT)
     @NotNull
     LocalDateTime creationDate;
-    Set<Long> likesId;
+    @NotNull
+    LocalDateTime updateDate;
+    Long likes;
+    Set<UserDto> usersLiked;
 
     @Override
     public boolean equals(Object o) {

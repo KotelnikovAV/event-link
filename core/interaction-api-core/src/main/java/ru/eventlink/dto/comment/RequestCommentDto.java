@@ -17,7 +17,7 @@ public class RequestCommentDto {
     Long eventId;
     @NotNull
     Long authorId;
-    Long targetUserId;
+    Long patentCommentId;
     @NotBlank
     String text;
 

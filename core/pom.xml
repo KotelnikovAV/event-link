@@ -17,6 +17,7 @@
         <module>event-server</module>
         <module>like-server</module>
         <module>request-server</module>
+        <module>comment-server</module>
     </modules>
 
     <properties>
