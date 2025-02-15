@@ -3,17 +3,25 @@ package ru.eventlink.comment.service;
 import ru.eventlink.dto.comment.CommentDto;
 import ru.eventlink.dto.comment.CommentUserDto;
 import ru.eventlink.dto.comment.RequestCommentDto;
+import ru.eventlink.dto.comment.UpdateCommentDto;
+import ru.eventlink.enums.CommentSort;
 
 import java.util.List;
 
 public interface CommentService {
-    List<CommentDto> findAllCommentsByEventId(Long eventId);
+    List<CommentDto> findAllCommentsByEventId(Long eventId, CommentSort commentSort, int from, int size);
 
-    List<CommentUserDto> findAllCommentsByUserId(Long userId);
+    List<CommentUserDto> findAllCommentsByUserId(Long userId, CommentSort commentSort, int from, int size);
 
-    CommentDto addComment(Long eventId, RequestCommentDto commentDto);
+    CommentDto addComment(Long userId, Long eventId, RequestCommentDto commentDto);
 
-    CommentDto updateComment(RequestCommentDto commentDto);
+    CommentDto updateComment(Long userId, Long eventId, String commentId, UpdateCommentDto updateCommentDto);
 
-    CommentDto addSubComment(String parentCommentId, RequestCommentDto commentDto);
+    CommentDto addSubComment(Long userId, String parentCommentId, RequestCommentDto commentDto);
+
+    CommentDto deleteComment(Long userId, String commentId);
+
+    CommentDto addLike(Long userId, Long eventId, String commentId);
+
+    CommentDto updateLike(Long userId, Long eventId, String commentId);
 }

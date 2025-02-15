@@ -2,6 +2,7 @@ package ru.eventlink.dto.comment;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -17,8 +18,9 @@ public class RequestCommentDto {
     Long eventId;
     @NotNull
     Long authorId;
-    Long patentCommentId;
+    String patentCommentId;
     @NotBlank
+    @Size(max = 1500)
     String text;
 
     @Override
