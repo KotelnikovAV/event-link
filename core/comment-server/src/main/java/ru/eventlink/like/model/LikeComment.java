@@ -26,8 +26,6 @@ import java.util.Objects;
 public class LikeComment {
     @Id
     ObjectId id;
-    @NotNull(message = "eventId must not be null")
-    Long eventId;
     @NotNull(message = "commentId must not be null")
     ObjectId commentId;
     @NotNull(message = "authorId must not be null")

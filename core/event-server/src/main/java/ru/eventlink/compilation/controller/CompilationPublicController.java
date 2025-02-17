@@ -21,10 +21,10 @@ public class CompilationPublicController {
 
     @GetMapping
     public List<CompilationDto> getAllCompilations(@RequestParam(required = false) Boolean pinned,
-                                                   @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+                                                   @RequestParam(defaultValue = "0") @PositiveOrZero Integer page,
                                                    @RequestParam(defaultValue = "10") @Positive Integer size) {
-        log.info("getAllCompilations with pinned={}, from={}, size={}", pinned, from, size);
-        return compilationService.getAllCompilations(pinned, from, size);
+        log.info("getAllCompilations with pinned={}, page={}, size={}", pinned, page, size);
+        return compilationService.getAllCompilations(pinned, page, size);
     }
 
     @GetMapping("/{compId}")

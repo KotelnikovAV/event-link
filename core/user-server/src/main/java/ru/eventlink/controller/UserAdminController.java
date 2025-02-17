@@ -26,18 +26,18 @@ public class UserAdminController implements UserClient {
     @Validated
     @Override
     public List<UserDto> getAllUsers(@RequestParam(required = false) List<Long> ids,
-                                     @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+                                     @RequestParam(defaultValue = "0") @PositiveOrZero Integer page,
                                      @RequestParam(defaultValue = "10") @Positive Integer size) {
         log.info("Get all users");
-        return userService.getAllUsers(ids, from, size);
+        return userService.getAllUsers(ids, page, size);
     }
 
     @GetMapping("/rating")
     @Override
-    public List<UserDto> getAllUsersBySortRating(@RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+    public List<UserDto> getAllUsersBySortRating(@RequestParam(defaultValue = "0") @PositiveOrZero Integer page,
                                                  @RequestParam(defaultValue = "10") @Positive Integer size) {
         log.info("Get all users by sort rating");
-        return userService.getAllUsersBySortRating(from, size);
+        return userService.getAllUsersBySortRating(page, size);
     }
 
     @PostMapping

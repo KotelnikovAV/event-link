@@ -9,9 +9,9 @@ import ru.eventlink.enums.CommentSort;
 import java.util.List;
 
 public interface CommentService {
-    List<CommentDto> findAllCommentsByEventId(Long eventId, CommentSort commentSort, int from, int size);
+    List<CommentDto> findAllCommentsByEventId(Long eventId, CommentSort commentSort, int page, int size);
 
-    List<CommentUserDto> findAllCommentsByUserId(Long userId, CommentSort commentSort, int from, int size);
+    List<CommentUserDto> findAllCommentsByUserId(Long userId, CommentSort commentSort, int page, int size);
 
     CommentDto addComment(Long userId, Long eventId, RequestCommentDto commentDto);
 
@@ -20,8 +20,4 @@ public interface CommentService {
     CommentDto addSubComment(Long userId, String parentCommentId, RequestCommentDto commentDto);
 
     CommentDto deleteComment(Long userId, String commentId);
-
-    CommentDto addLike(Long userId, Long eventId, String commentId);
-
-    CommentDto updateLike(Long userId, Long eventId, String commentId);
 }

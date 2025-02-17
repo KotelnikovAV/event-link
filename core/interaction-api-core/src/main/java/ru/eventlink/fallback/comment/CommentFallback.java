@@ -5,6 +5,7 @@ import ru.eventlink.dto.comment.CommentDto;
 import ru.eventlink.dto.comment.CommentUserDto;
 import ru.eventlink.dto.comment.RequestCommentDto;
 import ru.eventlink.dto.comment.UpdateCommentDto;
+import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.enums.CommentSort;
 import ru.eventlink.exception.ServerUnavailableException;
 
@@ -12,12 +13,12 @@ import java.util.List;
 
 public class CommentFallback implements CommentClient {
     @Override
-    public List<CommentDto> findAllCommentsByEventId(Long eventId, CommentSort commentSort, int from, int size) {
+    public List<CommentDto> findAllCommentsByEventId(Long eventId, CommentSort commentSort, int page, int size) {
         throw new ServerUnavailableException("Endpoint /api/v1/admin/events/{eventId}/comments method GET is unavailable");
     }
 
     @Override
-    public List<CommentUserDto> findAllCommentsByUserId(Long userId, CommentSort commentSort, int from, int size) {
+    public List<CommentUserDto> findAllCommentsByUserId(Long userId, CommentSort commentSort, int page, int size) {
         throw new ServerUnavailableException("Endpoint /api/v1/admin/events/comments method GET is unavailable");
     }
 
@@ -34,26 +35,32 @@ public class CommentFallback implements CommentClient {
     }
 
     @Override
-    public CommentDto addSubComment(Long userId, String parentCommentId, RequestCommentDto commentDto) {
+    public CommentDto addSubComment(Long userId, Long eventId, String parentCommentId, RequestCommentDto commentDto) {
         throw new ServerUnavailableException("Endpoint /api/v1/users/{userId}/events/{eventId}/comments/{commentId} " +
                 "method POST is unavailable");
     }
 
     @Override
-    public CommentDto deleteComment(Long userId, String commentId) {
+    public void deleteComment(Long userId, Long eventId, String commentId) {
         throw new ServerUnavailableException("Endpoint /api/v1/users/{userId}/events/{eventId}/comments/{commentId} " +
                 "method DELETE is unavailable");
     }
 
     @Override
-    public CommentDto addLike(Long userId, Long eventId, String commentId) {
-        throw new ServerUnavailableException("Endpoint /api/v1/users/{userId}/events/{eventId}/comments/{commentId}/like" +
+    public void addLike(Long userId, String commentId) {
+        throw new ServerUnavailableException("Endpoint /api/v1/users/{userId}/events/comments/{commentId}/like" +
                 " method POST is unavailable");
     }
 
     @Override
-    public CommentDto updateLike(Long userId, Long eventId, String commentId) {
-        throw new ServerUnavailableException("Endpoint /api/v1/users/{userId}/events/{eventId}/comments/{commentId}/like" +
+    public List<UserDto> findLikesByCommentId(Long userId, String commentId, int page) {
+        throw new ServerUnavailableException("Endpoint /api/v1/users/{userId}/events/comments/{commentId}/like" +
+                " method GET is unavailable");
+    }
+
+    @Override
+    public void updateLike(Long userId, String commentId) {
+        throw new ServerUnavailableException("Endpoint /api/v1/users/{userId}/events/comments/{commentId}/like" +
                 " method PATCH is unavailable");
     }
 }

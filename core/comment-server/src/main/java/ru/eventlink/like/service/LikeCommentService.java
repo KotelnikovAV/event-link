@@ -1,14 +1,15 @@
 package ru.eventlink.like.service;
 
 import org.bson.types.ObjectId;
-import ru.eventlink.like.model.LikeComment;
+import ru.eventlink.dto.user.UserDto;
+import ru.eventlink.enums.ViewMode;
 
 import java.util.List;
 
 public interface LikeCommentService {
-    void addLike(Long eventId, ObjectId commentId, Long authorId);
+    void addLike(ObjectId commentId, Long authorId);
 
     void deleteLike(Long authorId, ObjectId commentId);
 
-    List<LikeComment> getLikeCommentsByCommentId(ObjectId commentId);
+    List<UserDto> findLikesByCommentId(Long userId, String commentId, int page, ViewMode mode);
 }

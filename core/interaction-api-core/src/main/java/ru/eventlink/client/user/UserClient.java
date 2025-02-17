@@ -19,11 +19,11 @@ public interface UserClient {
     @GetMapping("/api/v1/admin/users")
     @Validated
     List<UserDto> getAllUsers(@RequestParam(required = false) List<Long> ids,
-                              @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+                              @RequestParam(defaultValue = "0") @PositiveOrZero Integer page,
                               @RequestParam(defaultValue = "10") @Positive Integer size);
 
     @GetMapping("/api/v1/admin/users/rating")
-    List<UserDto> getAllUsersBySortRating(@RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+    List<UserDto> getAllUsersBySortRating(@RequestParam(defaultValue = "0") @PositiveOrZero Integer page,
                                           @RequestParam(defaultValue = "10") @Positive Integer size);
 
     @PostMapping("/api/v1/admin/users")

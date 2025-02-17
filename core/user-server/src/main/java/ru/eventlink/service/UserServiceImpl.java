@@ -25,9 +25,9 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
-    public List<UserDto> getAllUsers(List<Long> ids, int from, int size) {
+    public List<UserDto> getAllUsers(List<Long> ids, int page, int size) {
         log.info("The beginning of the process of finding all users");
-        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.ASC, "id"));
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id"));
         List<User> users;
 
         if (CollectionUtils.isEmpty(ids)) {
@@ -41,9 +41,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDto> getAllUsersBySortRating(int from, int size) {
+    public List<UserDto> getAllUsersBySortRating(int page, int size) {
         log.info("The beginning of the process of finding all users by sort rating");
-        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "rating"));
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "rating"));
         List<User> users = userRepository.findAll(pageRequest).getContent();
         log.info("The user by sort rating has been found");
         return userMapper.listUserToListUserDto(users);

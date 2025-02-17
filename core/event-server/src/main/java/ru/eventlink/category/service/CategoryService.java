@@ -11,7 +11,7 @@ public interface CategoryService {
 
     Category updateCategory(long catId, Category category);
 
-    List<Category> getAllCategories(int from, int size);
+    List<Category> getAllCategories(int page, int size);
 
     Category getCategory(long catId);
 }

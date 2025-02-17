@@ -15,7 +15,7 @@ public interface EventService {
 
     EventFullDto findEventByUserIdAndEventId(long userId, long eventId);
 
-    List<EventShortDto> findEventsByUser(long userId, int from, int size);
+    List<EventShortDto> findEventsByUser(long userId, int page, int size);
 
     EventFullDto updateEvent(UpdateEventUserRequest updateEventUserRequest, long userId, long eventId);
 
@@ -27,12 +27,12 @@ public interface EventService {
 
     List<EventShortDto> findAllPublicEvents(String text, List<Long> categories, Boolean paid,
                                             LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                            boolean onlyAvailable, EventPublicSort sort, int from, int size);
+                                            boolean onlyAvailable, EventPublicSort sort, int page, int size);
 
     EventFullDto findPublicEventById(long id);
 
     List<EventFullDto> findAllAdminEvents(List<Long> users, State state, List<Long> categories, LocalDateTime rangeStart,
-                                          LocalDateTime rangeEnd, int from, int size, boolean sortRating);
+                                          LocalDateTime rangeEnd, int page, int size, boolean sortRating);
 
     EventFullDto updateEventAdmin(UpdateEventAdminRequest updateEventAdminRequest, long eventId);
 

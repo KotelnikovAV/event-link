@@ -3,6 +3,8 @@ package ru.eventlink.comment.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.eventlink.client.event.EventClient;
 import ru.eventlink.client.user.UserClient;
@@ -31,12 +33,23 @@ public class CommentServiceImpl implements CommentService {
 
 
     @Override
-    public List<CommentDto> findAllCommentsByEventId(Long eventId, CommentSort commentSort, int from, int size) {
+    public List<CommentDto> findAllCommentsByEventId(Long eventId, CommentSort commentSort, int page, int size) {
+        log.info("Finding all comments by event id {}", eventId);
+
+        checkUserAndEventExists(null, eventId);
+
+        List<Comment> comments = commentRepository
+                .findByEventId(eventId, getPageRequest(page, size, commentSort))
+                .getContent();
+
+        List<CommentDto> commentsDto = commentMapper.commentListToCommentDtoList(comments);
+//        commentsDto.forEach(commentDto -> commentDto.setUsersLiked(likeCommentService.findLikesByCommentId()));
+
         return List.of();
     }
 
     @Override
-    public List<CommentUserDto> findAllCommentsByUserId(Long userId, CommentSort commentSort, int from, int size) {
+    public List<CommentUserDto> findAllCommentsByUserId(Long userId, CommentSort commentSort, int page, int size) {
         return List.of();
     }
 
@@ -79,23 +92,20 @@ public class CommentServiceImpl implements CommentService {
         return null;
     }
 
-    @Override
-    public CommentDto addLike(Long userId, Long eventId, String commentId) {
-        return null;
-    }
-
-    @Override
-    public CommentDto updateLike(Long userId, Long eventId, String commentId) {
-        return null;
-    }
-
     private void checkUserAndEventExists(Long userId, Long eventId) {
-        if (!userClient.getUserExists(userId)) {
+        if (userId != null && !userClient.getUserExists(userId)) {
             throw new NotFoundException("User with id =" + userId + " was not found");
         }
 
-        if (!eventClient.findExistEventByEventId(eventId)) {
+        if (eventId != null && !eventClient.findExistEventByEventId(eventId)) {
             throw new NotFoundException("Event with id =" + eventId + " was not found");
         }
+    }
+
+    private PageRequest getPageRequest(int page, int size, CommentSort commentSort) {
+        return switch (commentSort) {
+            case LIKES -> PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "likes"));
+            case DATE -> PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "creationDate"));
+        };
     }
 }

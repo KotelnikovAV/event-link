@@ -27,7 +27,7 @@ public interface EventClient {
                                           @RequestParam(required = false)
                                           @DateTimeFormat(pattern = Constants.DATE_TIME_FORMAT)
                                           LocalDateTime rangeEnd,
-                                          @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                          @RequestParam(defaultValue = "0") @PositiveOrZero int page,
                                           @RequestParam(defaultValue = "10") @Positive int size,
                                           @RequestParam(defaultValue = "true") Boolean sortRating);
 

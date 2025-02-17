@@ -2,6 +2,10 @@ package ru.eventlink.like.repository;
 
 import jakarta.validation.constraints.NotNull;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import ru.eventlink.like.model.LikeComment;
 
@@ -14,5 +18,10 @@ public interface LikeCommentRepository extends MongoRepository<LikeComment, Obje
     void deleteLikeCommentByCommentIdAndAuthorId(@NotNull(message = "commentId must not be null") ObjectId commentId,
                                                  @NotNull(message = "authorId must not be null") Long authorId);
 
-    List<LikeComment> findLikeCommentByCommentId(@NotNull(message = "commentId must not be null") ObjectId commentId);
+    List<LikeComment> findLikeCommentByCommentId(@NotNull(message = "commentId must not be null") ObjectId commentId,
+                                                 Sort sort,
+                                                 Limit limit);
+
+    Page<LikeComment> findLikeCommentByCommentId(@NotNull(message = "commentId must not be null") ObjectId commentId,
+                                                 Pageable pageable);
 }
