@@ -15,9 +15,13 @@ public interface CommentService {
 
     CommentDto addComment(Long userId, Long eventId, RequestCommentDto commentDto);
 
-    CommentDto updateComment(Long userId, Long eventId, String commentId, UpdateCommentDto updateCommentDto);
+    CommentDto updateComment(Long userId, String commentId, UpdateCommentDto updateCommentDto);
 
     CommentDto addSubComment(Long userId, String parentCommentId, RequestCommentDto commentDto);
 
     CommentDto deleteComment(Long userId, String commentId);
+
+    void addLike(String commentId, Long authorId);
+
+    void deleteLike(String commentId, Long authorId);
 }

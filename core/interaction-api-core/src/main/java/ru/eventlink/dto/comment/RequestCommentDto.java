@@ -18,7 +18,6 @@ public class RequestCommentDto {
     Long eventId;
     @NotNull
     Long authorId;
-    String patentCommentId;
     @NotBlank
     @Size(max = 1500)
     String text;

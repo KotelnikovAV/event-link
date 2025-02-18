@@ -27,28 +27,25 @@ public interface CommentClient {
     List<CommentUserDto> findAllCommentsByUserId(@RequestParam @Positive Long userId,
                                                  @RequestParam(required = false) CommentSort commentSort,
                                                  @RequestParam(defaultValue = "0") @PositiveOrZero int page,
-                                                 @RequestParam(defaultValue = "15") @Positive int size);
+                                                 @RequestParam(defaultValue = "50") @Positive int size);
 
     @PostMapping("/api/v1/users/{userId}/events/{eventId}/comments")
     CommentDto addComment(@PathVariable @Positive Long userId,
                           @PathVariable @Positive Long eventId,
                           @RequestBody @Valid RequestCommentDto commentDto);
 
-    @PatchMapping("/api/v1/users/{userId}/events/{eventId}/comments/{commentId}")
+    @PatchMapping("/api/v1/users/{userId}/events/comments/{commentId}")
     CommentDto updateComment(@PathVariable @Positive Long userId,
-                             @PathVariable @Positive Long eventId,
                              @PathVariable String commentId,
                              @RequestBody @Valid UpdateCommentDto updateCommentDto);
 
-    @PostMapping("/api/v1/users/{userId}/events/{eventId}/comments/{commentId}")
+    @PostMapping("/api/v1/users/{userId}/events/comments/{commentId}")
     CommentDto addSubComment(@PathVariable @Positive Long userId,
-                             @PathVariable @Positive Long eventId,
                              @PathVariable(name = "commentId") String parentCommentId,
                              @RequestBody @Valid RequestCommentDto commentDto);
 
-    @DeleteMapping("/api/v1/users/{userId}/events/{eventId}/comments/{commentId}")
+    @DeleteMapping("/api/v1/users/{userId}/events/comments/{commentId}")
     void deleteComment(@PathVariable @Positive Long userId,
-                       @PathVariable @Positive Long eventId,
                        @PathVariable String commentId);
 
     @PostMapping("/api/v1/users/{userId}/events/comments/{commentId}/like")
@@ -60,7 +57,7 @@ public interface CommentClient {
                                        @PathVariable String commentId,
                                        @RequestParam(defaultValue = "0") @PositiveOrZero int page);
 
-    @PatchMapping("/api/v1/users/{userId}/events/comments/{commentId}/like")
-    void updateLike(@PathVariable @Positive Long userId,
+    @DeleteMapping("/api/v1/users/{userId}/events/comments/{commentId}/like")
+    void deleteLike(@PathVariable @Positive Long userId,
                     @PathVariable String commentId);
 }

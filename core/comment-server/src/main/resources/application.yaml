@@ -1,9 +1,6 @@
-app:
-  maxLikesModalView: 5
-
 spring:
   application:
-    name: event-server
+    name: comment-server
   config:
     import: "configserver:"
   cloud:

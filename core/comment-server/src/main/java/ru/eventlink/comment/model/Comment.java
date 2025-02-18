@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.util.ProxyUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 @AllArgsConstructor
@@ -30,13 +31,19 @@ public class Comment {
     Long authorId;
     @NotBlank(message = "text must not be blank")
     String text;
+    @NotNull
+    Integer countResponse;
     ObjectId parentCommentId;
     @NotNull
     @CreatedDate
     LocalDateTime creationDate;
     @NotNull
+    @CreatedDate
     LocalDateTime updateDate;
     Long likes;
+    List<Long> likedUsersId;
+    @NotNull
+    Boolean deleted;
 
     @Override
     public final boolean equals(Object o) {

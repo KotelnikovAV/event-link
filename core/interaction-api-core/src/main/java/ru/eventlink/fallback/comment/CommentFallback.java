@@ -29,19 +29,19 @@ public class CommentFallback implements CommentClient {
     }
 
     @Override
-    public CommentDto updateComment(Long userId, Long eventId, String commentId, UpdateCommentDto updateCommentDto) {
+    public CommentDto updateComment(Long userId, String commentId, UpdateCommentDto updateCommentDto) {
         throw new ServerUnavailableException("Endpoint /api/v1/users/{userId}/events/{eventId}/comments/{commentId} " +
                 "method PATCH is unavailable");
     }
 
     @Override
-    public CommentDto addSubComment(Long userId, Long eventId, String parentCommentId, RequestCommentDto commentDto) {
+    public CommentDto addSubComment(Long userId, String parentCommentId, RequestCommentDto commentDto) {
         throw new ServerUnavailableException("Endpoint /api/v1/users/{userId}/events/{eventId}/comments/{commentId} " +
                 "method POST is unavailable");
     }
 
     @Override
-    public void deleteComment(Long userId, Long eventId, String commentId) {
+    public void deleteComment(Long userId, String commentId) {
         throw new ServerUnavailableException("Endpoint /api/v1/users/{userId}/events/{eventId}/comments/{commentId} " +
                 "method DELETE is unavailable");
     }
@@ -59,7 +59,7 @@ public class CommentFallback implements CommentClient {
     }
 
     @Override
-    public void updateLike(Long userId, String commentId) {
+    public void deleteLike(Long userId, String commentId) {
         throw new ServerUnavailableException("Endpoint /api/v1/users/{userId}/events/comments/{commentId}/like" +
                 " method PATCH is unavailable");
     }

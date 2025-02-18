@@ -26,13 +26,18 @@ public class CommentDto {
     Long authorId;
     @NotBlank
     String text;
+    @NotNull
+    Integer countResponse;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = Constants.DATE_TIME_FORMAT)
     @NotNull
     LocalDateTime creationDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = Constants.DATE_TIME_FORMAT)
     @NotNull
     LocalDateTime updateDate;
     Long likes;
     List<UserDto> usersLiked;
+    @NotNull
+    Boolean deleted;
 
     @Override
     public boolean equals(Object o) {

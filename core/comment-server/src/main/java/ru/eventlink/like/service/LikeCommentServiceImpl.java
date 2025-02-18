@@ -3,14 +3,12 @@ package ru.eventlink.like.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
-import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.eventlink.client.user.UserClient;
 import ru.eventlink.configuration.LikeCommentConfig;
 import ru.eventlink.dto.user.UserDto;
-import ru.eventlink.enums.ViewMode;
 import ru.eventlink.exception.NotFoundException;
 import ru.eventlink.exception.RestrictionsViolationException;
 import ru.eventlink.like.model.LikeComment;
@@ -47,7 +45,7 @@ public class LikeCommentServiceImpl implements LikeCommentService {
     }
 
     @Override
-    public void deleteLike(Long authorId, ObjectId commentId) {
+    public void deleteLike(ObjectId commentId, Long authorId) {
         log.info("Deleting like");
 
         if (!likeCommentRepository.existsLikeCommentByCommentIdAndAuthorId(commentId, authorId)) {
@@ -59,7 +57,7 @@ public class LikeCommentServiceImpl implements LikeCommentService {
     }
 
     @Override
-    public List<UserDto> findLikesByCommentId(Long userId, String commentId, int page, ViewMode mode) {
+    public List<UserDto> findLikesByCommentId(Long userId, String commentId, int page) {
         log.info("Getting likes comment");
 
         if (!userClient.getUserExists(userId)) {
@@ -68,25 +66,28 @@ public class LikeCommentServiceImpl implements LikeCommentService {
         }
 
         ObjectId id = new ObjectId(commentId);
-        List<LikeComment> likesComment;
 
-        if (mode.equals(ViewMode.PREVIEW)) {
-            likesComment = likeCommentRepository.findLikeCommentByCommentId(id,
-                            Sort.by(Sort.Direction.ASC, "creationDate"),
-                            Limit.of(likeCommentConfig.getMaxLikesModalView()));
-        } else {
-            PageRequest pageRequest = PageRequest.of(page,
-                    likeCommentConfig.getMaxLikesListView(),
-                    Sort.by(Sort.Direction.ASC, "creationDate"));
-            likesComment = likeCommentRepository.findLikeCommentByCommentId(id, pageRequest).getContent();
-        }
+        PageRequest pageRequest = PageRequest.of(page,
+                likeCommentConfig.getMaxLikesListView(),
+                Sort.by(Sort.Direction.ASC, "creationDate"));
+        List<LikeComment> likesComment = likeCommentRepository.findLikeCommentByCommentId(id, pageRequest).getContent();
 
         List<Long> usersId = likesComment.stream()
                 .map(LikeComment::getAuthorId)
                 .toList();
         List<UserDto> users = userClient.getAllUsers(usersId, 0, usersId.size());
 
-        log.info("The likes of the comments in the {} mode have been received", mode);
+        log.info("The likes of the comments have been received");
         return users;
+    }
+
+    @Override
+    public Long getUserIdForComment(ObjectId commentId, List<Long> usersId) {
+        log.info("Getting user id for comment");
+
+        LikeComment likeComment = likeCommentRepository.findFirstByCommentIdAndAuthorIdNotIn(commentId, usersId);
+
+        log.info("Like comment found");
+        return likeComment.getAuthorId();
     }
 }
