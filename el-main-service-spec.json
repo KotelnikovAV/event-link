@@ -51,9 +51,110 @@
     {
       "description": "API для работы с лайками событий",
       "name": "Private: Лайки событий"
+    },
+    {
+      "description": "Открытый API для работы с комментариями событий",
+      "name": "Public: Комментарии событий"
+    },
+    {
+      "description": "Закрытый API для работы с комментариями событий",
+      "name": "Private: Комментарии событий"
+    },
+    {
+      "description": "API для работы с комментариями событий",
+      "name": "Admin: Комментарии событий"
     }
   ],
   "paths": {
+    "/admin/events/comments": {
+      "get": {
+        "description": "Эндпоинт возвращает для администратора комментарии, оставленные конкретным пользователем",
+        "operationId": "findAllCommentsByUserId",
+        "parameters": [
+          {
+            "description": "id пользователя, комментарии которого нужно выгрузить",
+            "in": "query",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "description": "тип сортировки",
+            "in": "query",
+            "name": "commentSort",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LIKE",
+                "DATE"
+              ]
+            }
+          },
+          {
+            "description": "страница с которой нужно вывести комментарии",
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "description": "количество событий в наборе",
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventFullDto"
+                  }
+                }
+              }
+            },
+            "description": "События найдены"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "BAD_REQUEST",
+                  "reason": "Incorrectly made request.",
+                  "message": "Failed to convert value of type java.lang.String to required type int; nested exception is java.lang.NumberFormatException: For input string: ad",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Запрос составлен некорректно"
+          }
+        },
+        "summary": "Поиск событий",
+        "tags": [
+          "Admin: События"
+        ]
+      }
+    },
     "/admin/categories": {
       "post": {
         "description": "Обратите внимание: имя категории должно быть уникальным",
@@ -3122,6 +3223,110 @@
           }
         },
         "description": "Пользователь (краткая информация)"
+      },
+      "CommentUserDto": {
+        "required": [
+          "authorId",
+          "text",
+          "creationDate",
+          "updateDate"
+        ],
+        "type": "object",
+        "properties": {
+          "authorId": {
+            "type": "integer",
+            "description": "Идентификатор",
+            "format": "int64",
+            "example": 3
+          },
+          "text": {
+            "type": "string",
+            "description": "Текст комментария",
+            "example": "Крутое событие!"
+          },
+          "creationDate": {
+            "type": "string",
+            "description": "Дата и время создания комментария. Дата и время указываются в формате \"yyyy-MM-dd HH:mm:ss\"",
+            "example": "2023-10-11 23:10:05"
+          },
+          "updateDate": {
+            "type": "string",
+            "description": "Дата и время обновления комментария. Дата и время указываются в формате \"yyyy-MM-dd HH:mm:ss\"",
+            "example": "2023-10-11 23:10:05"
+          }
+        },
+        "description": "Информация о комментарии пользователя"
+      },
+      "CommentDto": {
+        "required": [
+          "id",
+          "eventId",
+          "authorId",
+          "text",
+          "countResponse",
+          "creationDate",
+          "updateDate",
+          "deleted"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Идентификатор комментария",
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "eventId": {
+            "type": "integer",
+            "description": "Идентификатор события, которому оставлен комментарий",
+            "format": "int64",
+            "example": 3
+          },
+          "authorId": {
+            "type": "integer",
+            "description": "Идентификатор пользователя, который оставил комментарий",
+            "format": "int64",
+            "example": 3
+          },
+          "text": {
+            "type": "string",
+            "description": "Текст комментария",
+            "example": "Крутое событие!"
+          },
+          "countResponse": {
+            "type": "integer",
+            "description": "Количество ответов на данный комментарий",
+            "format": "int32",
+            "example": 10
+          },
+          "creationDate": {
+            "type": "string",
+            "description": "Дата и время создания комментария. Дата и время указываются в формате \"yyyy-MM-dd HH:mm:ss\"",
+            "example": "2023-10-11 23:10:05"
+          },
+          "updateDate": {
+            "type": "string",
+            "description": "Дата и время обновления комментария. Дата и время указываются в формате \"yyyy-MM-dd HH:mm:ss\"",
+            "example": "2023-10-11 23:10:05"
+          },
+          "likes": {
+            "type": "integer",
+            "description": "Количество лайков данного комментария",
+            "format": "int32",
+            "example": 10
+          },
+          "usersLiked": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserDto"
+            }
+          },
+          "deleted": {
+            "type": "boolean",
+            "description": "Индикатор того, был ли комментарий удален",
+            "example": true
+          }
+        },
+        "description": "Информация о комментарии пользователя"
       }
     }
   }
