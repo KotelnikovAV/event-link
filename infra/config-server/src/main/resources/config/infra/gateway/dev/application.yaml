@@ -39,6 +39,13 @@ spring:
           filters:
             - PrefixPath=/api/v1
             - CircuitBreaker=UserClient
+        - id: comment_circuitbreaker_route
+          uri: lb://comment-server
+          predicates:
+            - Path=/admin/events/comments, /users/{segment}/events/{segment}/comments, /users/{segment}/events/comments/**, /events/{segment}/comments
+          filters:
+            - PrefixPath=/api/v1
+            - CircuitBreaker=CommentClient
 
 resilience4j:
   circuitbreaker:
@@ -68,6 +75,14 @@ resilience4j:
         minimumNumberOfCalls: 5
         automaticTransitionFromOpenToHalfOpenEnabled: true
       UserClient:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      CommentClient:
         slidingWindowSize: 10
         failureRateThreshold: 50
         waitDurationInOpenState: 10000

@@ -36,11 +36,11 @@ public class EventPublicController {
                                                   LocalDateTime rangeEnd,
                                                   @RequestParam(defaultValue = "false") Boolean onlyAvailable,
                                                   @RequestParam(defaultValue = "EVENT_DATE") EventPublicSort sort,
-                                                  @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+                                                  @RequestParam(defaultValue = "0") @PositiveOrZero Integer page,
                                                   @RequestParam(defaultValue = "10") @Positive Integer size) {
         log.info("Get all public events by text {}", text);
         return eventService.findAllPublicEvents(text, categories, paid,
-                rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+                rangeStart, rangeEnd, onlyAvailable, sort, page, size);
     }
 
     @GetMapping("/{eventId}")

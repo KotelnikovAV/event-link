@@ -11,12 +11,12 @@ import java.util.List;
 @Component
 public class UserFallback implements UserClient {
     @Override
-    public List<UserDto> getAllUsers(List<Long> ids, Integer from, Integer size) {
+    public List<UserDto> getAllUsers(List<Long> ids, Integer page, Integer size) {
         throw new ServerUnavailableException("Endpoint /api/v1/admin/users method GET is unavailable");
     }
 
     @Override
-    public List<UserDto> getAllUsersBySortRating(Integer from, Integer size) {
+    public List<UserDto> getAllUsersBySortRating(Integer page, Integer size) {
         throw new ServerUnavailableException("Endpoint /api/v1/admin/users/rating method GET is unavailable");
     }
 

@@ -35,12 +35,12 @@ public class EventAdminController implements EventClient {
                                                  @RequestParam(required = false)
                                                  @DateTimeFormat(pattern = Constants.DATE_TIME_FORMAT)
                                                  LocalDateTime rangeEnd,
-                                                 @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                                 @RequestParam(defaultValue = "0") @PositiveOrZero int page,
                                                  @RequestParam(defaultValue = "10") @Positive int size,
                                                  @RequestParam(defaultValue = "true") Boolean sortRating) {
-        log.info("Get all admin events by users {}, state {}, categories {}, rangeStart {}, rangeEnd {}, from {}, " +
-                "size {}, sortRating {}", users, states, categories, rangeStart, rangeEnd, from, size, sortRating);
-        return eventService.findAllAdminEvents(users, states, categories, rangeStart, rangeEnd, from, size, sortRating);
+        log.info("Get all admin events by users {}, state {}, categories {}, rangeStart {}, rangeEnd {}, page {}, " +
+                "size {}, sortRating {}", users, states, categories, rangeStart, rangeEnd, page, size, sortRating);
+        return eventService.findAllAdminEvents(users, states, categories, rangeStart, rangeEnd, page, size, sortRating);
     }
 
     @PatchMapping("/{eventId}")

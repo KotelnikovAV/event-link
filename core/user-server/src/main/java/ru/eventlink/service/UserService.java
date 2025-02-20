@@ -6,9 +6,9 @@ import ru.eventlink.dto.user.UserRequestDto;
 import java.util.List;
 
 public interface UserService {
-    List<UserDto> getAllUsers(List<Long> ids, int from, int size);
+    List<UserDto> getAllUsers(List<Long> ids, int page, int size);
 
-    List<UserDto> getAllUsersBySortRating(int from, int size);
+    List<UserDto> getAllUsersBySortRating(int page, int size);
 
     UserDto createUser(UserRequestDto requestDto);
 

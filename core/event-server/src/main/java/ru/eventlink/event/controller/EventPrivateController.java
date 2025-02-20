@@ -36,10 +36,10 @@ public class EventPrivateController {
 
     @GetMapping
     public List<EventShortDto> findEventsByUser(@PathVariable long userId,
-                                                @RequestParam(defaultValue = "0") int from,
+                                                @RequestParam(defaultValue = "0") int page,
                                                 @RequestParam(defaultValue = "10") int size) {
-        log.info("Received a GET request to find events by userId = {} from = {} size = {}", userId, from, size);
-        return eventService.findEventsByUser(userId, from, size);
+        log.info("Received a GET request to find events by userId = {} page = {} size = {}", userId, page, size);
+        return eventService.findEventsByUser(userId, page, size);
     }
 
     @PatchMapping("/{eventId}")

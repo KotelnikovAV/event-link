@@ -73,9 +73,9 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CompilationDto> getAllCompilations(Boolean pinned, int from, int size) {
+    public List<CompilationDto> getAllCompilations(Boolean pinned, int page, int size) {
         log.info("The beginning of the process of finding a all compilations");
-        PageRequest pageRequest = PageRequest.of(from, size);
+        PageRequest pageRequest = PageRequest.of(page, size);
         List<CompilationDto> compilationsDto;
 
         if (pinned == null) {

@@ -51,9 +51,726 @@
     {
       "description": "API для работы с лайками событий",
       "name": "Private: Лайки событий"
+    },
+    {
+      "description": "Открытый API для работы с комментариями событий",
+      "name": "Public: Комментарии событий"
+    },
+    {
+      "description": "Закрытый API для работы с комментариями событий",
+      "name": "Private: Комментарии событий"
+    },
+    {
+      "description": "API для работы с комментариями событий",
+      "name": "Admin: Комментарии событий"
+    },
+    {
+      "description": "API для работы с лайками комментариев",
+      "name": "Private: Лайки комментариев"
     }
   ],
   "paths": {
+    "/admin/events/comments": {
+      "get": {
+        "description": "Эндпоинт возвращает для администратора комментарии, оставленные конкретным пользователем",
+        "operationId": "findAllCommentsByUserId",
+        "parameters": [
+          {
+            "description": "id пользователя, комментарии которого нужно выгрузить",
+            "in": "query",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "description": "тип сортировки",
+            "in": "query",
+            "name": "commentSort",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LIKE",
+                "DATE"
+              ]
+            }
+          },
+          {
+            "description": "страница с которой нужно вывести комментарии",
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "description": "количество событий в наборе",
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommentUserDto"
+                  }
+                }
+              }
+            },
+            "description": "Комментарии найдены"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "Пользователя с указанным id не существует",
+                  "message": "Пользователя с id = 5 не существует",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Не найден пользователь"
+          }
+        },
+        "summary": "Поиск комментариев",
+        "tags": [
+          "Admin: Комментарии событий"
+        ]
+      }
+    },
+    "/api/v1/users/{userId}/events/{eventId}/comments": {
+      "post": {
+        "summary": "Добавление нового комментария",
+        "tags": [
+          "Private: Комментарии событий"
+        ],
+        "operationId": "addComment",
+        "parameters": [
+          {
+            "description": "id пользователя, который оставляет комментарий",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "description": "id события, которому оставляют комментарий",
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestCommentDto"
+              }
+            }
+          },
+          "description": "данные добавляемого комментария",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "BAD_REQUEST",
+                  "reason": "Incorrectly made request.",
+                  "message": "Field: text. Error: must not be blank. Value: null",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Запрос составлен некорректно"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "Пользователя с указанным id не существует",
+                  "message": "Пользователя с id = 5 не существует",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Пользователя или событие не найдено"
+          }
+        }
+      }
+    },
+    "/api/v1/users/{userId}/events/comments/{commentId}": {
+      "patch": {
+        "summary": "Обновление комментария",
+        "tags": [
+          "Private: Комментарии событий"
+        ],
+        "operationId": "updateComment",
+        "parameters": [
+          {
+            "description": "id пользователя, который обновляет свой комментарий",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 10
+            }
+          },
+          {
+            "description": "id комментария, который обновляет пользователь",
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "507f191e810c19729de860ea"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "BAD_REQUEST",
+                  "reason": "Incorrectly made request.",
+                  "message": "Field: text. Error: must not be blank. Value: null",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Запрос составлен некорректно"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "Пользователя с указанным id не существует",
+                  "message": "Пользователя с id = 5 не существует",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Пользователь или событие или комментарий не найден"
+          }
+        }
+      },
+      "post": {
+        "summary": "Добавление ответа комментарию",
+        "tags": [
+          "Private: Комментарии событий"
+        ],
+        "operationId": "addSubComment",
+        "parameters": [
+          {
+            "description": "id пользователя, который оставляет ответ",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 4
+            }
+          },
+          {
+            "description": "id комментария, которому пишется ответ",
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "507f191e810c19729de860ea"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestCommentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "BAD_REQUEST",
+                  "reason": "Incorrectly made request.",
+                  "message": "Field: text. Error: must not be blank. Value: null",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Запрос составлен некорректно"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "Пользователя с указанным id не существует",
+                  "message": "Пользователя с id = 5 не существует",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Пользователя или событие не найдено"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удаление комментария",
+        "tags": [
+          "Private: Комментарии событий"
+        ],
+        "operationId": "deleteComment",
+        "parameters": [
+          {
+            "description": "id пользователя, который удаляет свой комментарий",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 5
+            }
+          },
+          {
+            "description": "id комментария, который удаляется",
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "507f191e810c19729de860ea"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "Пользователя с указанным id не существует",
+                  "message": "Пользователя с id = 5 не существует",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Пользователя или событие не найдено"
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/comments": {
+      "get": {
+        "summary": "Поиск комментариев к событию",
+        "tags": [
+          "Private: Комментарии событий"
+        ],
+        "operationId": "findAllCommentsByEventId",
+        "parameters": [
+          {
+            "description": "id события, комментарии которого нужно выгрузить",
+            "in": "query",
+            "name": "eventId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 5
+            }
+          },
+          {
+            "description": "тип сортировки",
+            "in": "query",
+            "name": "commentSort",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LIKE",
+                "DATE"
+              ]
+            }
+          },
+          {
+            "description": "страница с которой нужно вывести комментарии",
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "description": "количество событий в наборе",
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommentDto"
+                  }
+                }
+              }
+            },
+            "description": "Комментарии найдены"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "Пользователя с указанным id не существует",
+                  "message": "Пользователя с id = 5 не существует",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Не найден пользователь"
+          }
+        }
+      }
+    },
+    "/api/v1/users/{userId}/events/comments/{commentId}/like": {
+      "post": {
+        "summary": "Добавление лайка комментарию",
+        "tags": [
+          "Private: Лайки комментариев"
+        ],
+        "operationId": "addLike",
+        "parameters": [
+          {
+            "description": "id пользователя, который ставит лайк",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 5
+            }
+          },
+          {
+            "description": "id комментария, которому ставится лайк",
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "507f191e810c19729de860ea"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "Пользователя с указанным id не существует",
+                  "message": "Пользователя с id = 5 не существует",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Не найден пользователь или комментарий"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "CONFLICT",
+                  "reason": "Пользователь уже ставил лайк этому комментарию",
+                  "message": "User authorId have already rated comment commentId",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Нарушение целостности данных"
+          }
+        }
+      },
+      "get": {
+        "summary": "Получение списка лайков комментария",
+        "tags": [
+          "Private: Лайки комментариев"
+        ],
+        "operationId": "findLikesByCommentId",
+        "parameters": [
+          {
+            "description": "id пользователя, который запрашивает список",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 5
+            }
+          },
+          {
+            "description": "id комментария, лайки которого нужно найти",
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "507f191e810c19729de860ea"
+            }
+          },
+          {
+            "description": "номер страницы",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "Пользователя с указанным id не существует",
+                  "message": "Пользователя с id = 5 не существует",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Не найден пользователь"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удаление лайка",
+        "tags": [
+          "Private: Лайки комментариев"
+        ],
+        "operationId": "deleteLike",
+        "parameters": [
+          {
+            "description": "id пользователя, который удаляет лайк",
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 5
+            }
+          },
+          {
+            "description": "id комментария, у которого удаляют лайк",
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "507f191e810c19729de860ea"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "Пользователя с указанным id не существует",
+                  "message": "Пользователя с id = 5 не существует",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Не найден пользователь или комментарий"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "CONFLICT",
+                  "reason": "Пользователь не ставил лайк этому комментарию",
+                  "message": "User authorId did not rate comment commentId",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Нарушение целостности данных"
+          }
+        }
+      }
+    },
     "/admin/categories": {
       "post": {
         "description": "Обратите внимание: имя категории должно быть уникальным",
@@ -3122,6 +3839,150 @@
           }
         },
         "description": "Пользователь (краткая информация)"
+      },
+      "CommentUserDto": {
+        "required": [
+          "authorId",
+          "text",
+          "creationDate",
+          "updateDate"
+        ],
+        "type": "object",
+        "properties": {
+          "authorId": {
+            "type": "integer",
+            "description": "Идентификатор",
+            "format": "int64",
+            "example": 3
+          },
+          "text": {
+            "type": "string",
+            "description": "Текст комментария",
+            "example": "Крутое событие!"
+          },
+          "creationDate": {
+            "type": "string",
+            "description": "Дата и время создания комментария. Дата и время указываются в формате \"yyyy-MM-dd HH:mm:ss\"",
+            "example": "2023-10-11 23:10:05"
+          },
+          "updateDate": {
+            "type": "string",
+            "description": "Дата и время обновления комментария. Дата и время указываются в формате \"yyyy-MM-dd HH:mm:ss\"",
+            "example": "2023-10-11 23:10:05"
+          }
+        },
+        "description": "Информация о комментарии пользователя"
+      },
+      "CommentDto": {
+        "required": [
+          "id",
+          "eventId",
+          "authorId",
+          "text",
+          "countResponse",
+          "creationDate",
+          "updateDate",
+          "deleted"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Идентификатор комментария",
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "eventId": {
+            "type": "integer",
+            "description": "Идентификатор события, которому оставлен комментарий",
+            "format": "int64",
+            "example": 3
+          },
+          "authorId": {
+            "type": "integer",
+            "description": "Идентификатор пользователя, который оставил комментарий",
+            "format": "int64",
+            "example": 3
+          },
+          "text": {
+            "type": "string",
+            "description": "Текст комментария",
+            "example": "Крутое событие!"
+          },
+          "countResponse": {
+            "type": "integer",
+            "description": "Количество ответов на данный комментарий",
+            "format": "int32",
+            "example": 10
+          },
+          "creationDate": {
+            "type": "string",
+            "description": "Дата и время создания комментария. Дата и время указываются в формате \"yyyy-MM-dd HH:mm:ss\"",
+            "example": "2023-10-11 23:10:05"
+          },
+          "updateDate": {
+            "type": "string",
+            "description": "Дата и время обновления комментария. Дата и время указываются в формате \"yyyy-MM-dd HH:mm:ss\"",
+            "example": "2023-10-11 23:10:05"
+          },
+          "likes": {
+            "type": "integer",
+            "description": "Количество лайков данного комментария",
+            "format": "int32",
+            "example": 10
+          },
+          "usersLiked": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserDto"
+            }
+          },
+          "deleted": {
+            "type": "boolean",
+            "description": "Индикатор того, был ли комментарий удален",
+            "example": true
+          }
+        },
+        "description": "Информация о комментарии пользователя"
+      },
+      "UpdateCommentDto": {
+        "required": [
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Новый текст комментария",
+            "example": "Это новый текст!"
+          }
+        }
+      },
+      "RequestCommentDto": {
+        "required": [
+          "eventId",
+          "authorId",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "id события, которому оставляется комментарий",
+            "example": 10
+          },
+          "authorId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "id пользователя, который оставляет комментарий",
+            "example": "Это новый текст!"
+          },
+          "text": {
+            "type": "string",
+            "description": "Текст комментария",
+            "example": "Это мой комментарий!"
+          }
+        }
       }
     }
   }

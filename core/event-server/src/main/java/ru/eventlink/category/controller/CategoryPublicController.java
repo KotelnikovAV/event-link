@@ -23,11 +23,11 @@ public class CategoryPublicController {
 
     @GetMapping
     public List<CategoryDto> getAllCategories(@RequestParam(defaultValue = "0")
-                                              @PositiveOrZero Integer from,
+                                              @PositiveOrZero Integer page,
                                               @RequestParam(defaultValue = "10")
                                               @Positive Integer size) {
-        log.info("getAllCategories: from={}, size={}", from, size);
-        return categoryMapper.listCategoryToListCategoryDto(categoryService.getAllCategories(from, size));
+        log.info("getAllCategories: page={}, size={}", page, size);
+        return categoryMapper.listCategoryToListCategoryDto(categoryService.getAllCategories(page, size));
     }
 
     @GetMapping("/{catId}")

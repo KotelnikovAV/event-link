@@ -4,19 +4,18 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.eventlink.enums.StateActionUser;
 import ru.eventlink.utility.Constants;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateEventUserRequest {
     @Size(min = 20, max = 2000)
@@ -35,4 +34,15 @@ public class UpdateEventUserRequest {
     @Size(min = 3, max = 120)
     String title;
     StateActionUser stateAction;
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof UpdateEventUserRequest that)) return false;
+        return Objects.equals(annotation, that.annotation) && Objects.equals(eventDate, that.eventDate) && Objects.equals(location, that.location);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(annotation, eventDate, location);
+    }
 }

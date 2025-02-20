@@ -18,7 +18,7 @@ public class EventFallback implements EventClient {
                                                  List<Long> categories,
                                                  LocalDateTime rangeStart,
                                                  LocalDateTime rangeEnd,
-                                                 int from,
+                                                 int page,
                                                  int size,
                                                  Boolean sortRating) {
         throw new ServerUnavailableException("Endpoint /api/v1/admin/events method GET is unavailable");

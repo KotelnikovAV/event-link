@@ -66,9 +66,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Category> getAllCategories(int from, int size) {
+    public List<Category> getAllCategories(int page, int size) {
         log.info("The beginning of the process of finding a categories");
-        PageRequest pageRequest = PageRequest.of(from, size);
+        PageRequest pageRequest = PageRequest.of(page, size);
         Page<Category> pageCategories = categoryRepository.findAll(pageRequest);
         List<Category> categories;
 

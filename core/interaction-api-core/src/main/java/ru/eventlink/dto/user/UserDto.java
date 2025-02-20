@@ -1,18 +1,29 @@
 package ru.eventlink.dto.user;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Data
+import java.util.Objects;
+
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserDto {
-    String email;
     Long id;
+    String email;
     String name;
     Long rating;
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof UserDto userDto)) return false;
+        return Objects.equals(id, userDto.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }

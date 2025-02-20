@@ -24,7 +24,8 @@ public interface EventMapper {
     @Mapping(target = "category", expression = "java(null)")
     Event newEventDtoToEvent(NewEventDto newEventDto);
 
-    @Mapping(target = "initiator", source = "")
+
+    @Mapping(target = "initiator", ignore = true)
     EventFullDto eventToEventFullDto(Event event);
 
     List<EventShortDto> listEventToListEventShortDto(List<Event> events);
