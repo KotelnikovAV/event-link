@@ -6,6 +6,7 @@ import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import ru.eventlink.client.user.UserClient;
 import ru.eventlink.configuration.LikeCommentConfig;
 import ru.eventlink.dto.user.UserDto;
@@ -27,10 +28,6 @@ public class LikeCommentServiceImpl implements LikeCommentService {
     @Override
     public void addLike(ObjectId commentId, Long authorId) {
         log.info("Adding like");
-
-        if (!userClient.getUserExists(authorId)) {
-            throw new NotFoundException("User with id =" + authorId + " was not found");
-        }
 
         if (likeCommentRepository.existsLikeCommentByCommentIdAndAuthorId(commentId, authorId)) {
             throw new RestrictionsViolationException("User " + authorId + " have already rated comment " + commentId);
@@ -72,13 +69,17 @@ public class LikeCommentServiceImpl implements LikeCommentService {
                 Sort.by(Sort.Direction.ASC, "creationDate"));
         List<LikeComment> likesComment = likeCommentRepository.findLikeCommentByCommentId(id, pageRequest).getContent();
 
-        List<Long> usersId = likesComment.stream()
-                .map(LikeComment::getAuthorId)
-                .toList();
-        List<UserDto> users = userClient.getAllUsers(usersId, 0, usersId.size());
-
-        log.info("The likes of the comments have been received");
-        return users;
+        if (!CollectionUtils.isEmpty(likesComment)) {
+            List<Long> usersId = likesComment.stream()
+                    .map(LikeComment::getAuthorId)
+                    .toList();
+            List<UserDto> users = userClient.getAllUsers(usersId, 0, usersId.size());
+            log.info("The likes of the comments have been received");
+            return users;
+        } else {
+            log.info("No likes found");
+            return List.of();
+        }
     }
 
     @Override
