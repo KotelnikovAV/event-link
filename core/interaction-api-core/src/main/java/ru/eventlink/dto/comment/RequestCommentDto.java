@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.util.Objects;
 
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

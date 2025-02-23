@@ -9,6 +9,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.eventlink.exception.*;
 import ru.eventlink.exception.model.ApiError;
@@ -134,6 +135,19 @@ public class ExceptionController {
         return ApiError.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.name())
                 .reason("Internal Server Error")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now())
+                .errors(ExceptionUtils.getStackTrace(e))
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleHandlerMethodValidationException(HandlerMethodValidationException e) {
+        log.error("400 {} ", e.getMessage());
+        return ApiError.builder()
+                .status(HttpStatus.BAD_REQUEST.name())
+                .reason("BAD_REQUEST")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())
                 .errors(ExceptionUtils.getStackTrace(e))

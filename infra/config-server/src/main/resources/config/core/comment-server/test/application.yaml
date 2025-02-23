@@ -1,0 +1,8 @@
+server:
+  port: 8080
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017,localhost:27018,localhost:27019/comments?replicaSet=rs0
+      transaction-enabled: true
+      auto-index-creation: true

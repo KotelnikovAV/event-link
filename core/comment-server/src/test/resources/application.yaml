@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: comment-server-test
+  config:
+    import: optional:classpath:application-test.yaml
+  cloud:
+    config:
+      enabled: false
+    discovery:
+        enabled: false
+
+server:
+  port: 8080
