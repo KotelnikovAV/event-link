@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: comment-server-test
+  config:
+    import: optional:classpath:application-test.yaml
+  cloud:
+    config:
+      enabled: false
+    discovery:
+        enabled: false
+
+server:
+  port: 8080
+
+comment:
+  like:
+    max-likes-list-view: 20
+    max-likes-modal-view: 5

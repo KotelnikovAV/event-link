@@ -9,6 +9,7 @@ import ru.eventlink.dto.comment.CommentDto;
 import ru.eventlink.dto.comment.CommentUserDto;
 import ru.eventlink.dto.comment.RequestCommentDto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
@@ -18,9 +19,9 @@ public interface CommentMapper {
     @Mapping(target = "likedUsersId", ignore = true)
     @Mapping(target = "parentCommentId", ignore = true)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "creationDate", ignore = true)
+    @Mapping(target = "creationDate", expression = "java(getDate())")
     @Mapping(target = "likes", ignore = true)
-    @Mapping(target = "updateDate", ignore = true)
+    @Mapping(target = "updateDate", expression = "java(getDate())")
     Comment requestCommentDtoToComment(RequestCommentDto requestCommentDto);
 
     @Mapping(target = "usersLiked", ignore = true)
@@ -33,5 +34,9 @@ public interface CommentMapper {
 
     default String getStringId(ObjectId objectId) {
         return objectId.toString();
+    }
+
+    default LocalDateTime getDate() {
+        return LocalDateTime.now();
     }
 }

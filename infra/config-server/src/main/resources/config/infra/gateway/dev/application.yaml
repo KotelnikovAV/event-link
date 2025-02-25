@@ -42,7 +42,7 @@ spring:
         - id: comment_circuitbreaker_route
           uri: lb://comment-server
           predicates:
-            - Path=/admin/events/comments, /users/{segment}/events/{segment}/comments, /users/{segment}/events/comments/**, /events/{segment}/comments
+            - Path=/admin/events/comments, /users/{segment1}/events/{segment2}/comments, /users/{segment}/events/comments/**, /events/{segment}/comments
           filters:
             - PrefixPath=/api/v1
             - CircuitBreaker=CommentClient

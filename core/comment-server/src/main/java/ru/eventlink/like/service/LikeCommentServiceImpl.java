@@ -15,6 +15,7 @@ import ru.eventlink.exception.RestrictionsViolationException;
 import ru.eventlink.like.model.LikeComment;
 import ru.eventlink.like.repository.LikeCommentRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -36,6 +37,7 @@ public class LikeCommentServiceImpl implements LikeCommentService {
         LikeComment likeComment = new LikeComment();
         likeComment.setCommentId(commentId);
         likeComment.setAuthorId(authorId);
+        likeComment.setCreationDate(LocalDateTime.now());
 
         likeCommentRepository.save(likeComment);
         log.info("Like comment added");

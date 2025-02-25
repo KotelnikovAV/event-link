@@ -19,7 +19,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Document(collation = "likes")
+@Document(value = "likes")
 @CompoundIndexes({
         @CompoundIndex(name = "commentId_authorId_idx", def = "{'commentId': 1, 'authorId': 1}")
 })

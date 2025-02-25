@@ -21,12 +21,12 @@ import java.util.List;
 public class CommentAdminController {
     private final CommentService commentService;
 
-    @GetMapping("/api/v1/admin/events/comments")
+    @GetMapping
     public List<CommentUserDto> findAllCommentsByUserId(@RequestParam @Positive Long userId,
-                                                        @RequestParam(required = false) CommentSort commentSort,
+                                                        @RequestParam(required = false) CommentSort sort,
                                                         @RequestParam(defaultValue = "0") @PositiveOrZero int page,
                                                         @RequestParam(defaultValue = "50") @Positive int size) {
-        log.info("Get all comments event by userId = {}, sort = {}", userId, commentSort);
-        return commentService.findAllCommentsByUserId(userId, commentSort, page, size);
+        log.info("Get all comments event by userId = {}, sort = {}", userId, sort);
+        return commentService.findAllCommentsByUserId(userId, sort, page, size);
     }
 }
