@@ -77,6 +77,7 @@ public class CommentServiceImpl implements CommentService {
 
         Comment comment = commentMapper.requestCommentDtoToComment(commentDto);
         comment.setCountResponse(0);
+        comment.setLikes(0);
         comment.setDeleted(false);
         comment = commentRepository.save(comment);
 
@@ -151,11 +152,11 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Comment " + commentId + " not found"));
 
-        if (comment.getLikes() == null) {
-            comment.setLikes(1L);
+        if (comment.getLikes() == 0) {
+            comment.setLikes(1);
             comment.setLikedUsersId(List.of(authorId));
         } else {
-            comment.setLikes(comment.getLikes() + 1L);
+            comment.setLikes(comment.getLikes() + 1);
             if (comment.getLikedUsersId().size() < likeCommentConfig.getMaxLikesModalView()) {
                 List<Long> likedUsersId = comment.getLikedUsersId();
                 likedUsersId.add(authorId);
@@ -178,7 +179,7 @@ public class CommentServiceImpl implements CommentService {
 
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Comment " + commentId + " not found"));
-        comment.setLikes(comment.getLikes() - 1L);
+        comment.setLikes(comment.getLikes() - 1);
 
         if (comment.getLikedUsersId().contains(authorId)) {
             List<Long> likedUsersId = comment.getLikedUsersId();

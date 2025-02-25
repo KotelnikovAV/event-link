@@ -30,3 +30,8 @@ resilience4j:
         slidingWindowType: COUNT_BASED
         minimumNumberOfCalls: 5
         automaticTransitionFromOpenToHalfOpenEnabled: true
+
+comment:
+  like:
+    max-likes-list-view: 20
+    max-likes-modal-view: 5

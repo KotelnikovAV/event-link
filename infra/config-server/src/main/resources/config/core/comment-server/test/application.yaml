@@ -1,8 +1,37 @@
 server:
-  port: 8080
+  port: 0
 spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017,localhost:27018,localhost:27019/comments?replicaSet=rs0
       transaction-enabled: true
       auto-index-creation: true
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      EventClient:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      UserClient:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+comment:
+  like:
+    max-likes-list-view: 20
+    max-likes-modal-view: 5

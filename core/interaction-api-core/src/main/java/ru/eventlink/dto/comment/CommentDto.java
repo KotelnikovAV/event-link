@@ -35,7 +35,7 @@ public class CommentDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = Constants.DATE_TIME_FORMAT)
     @NotNull
     LocalDateTime updateDate;
-    Long likes;
+    Integer likes;
     List<UserDto> usersLiked;
     @NotNull
     Boolean deleted;

@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.util.ProxyUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,7 +21,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Document(collation = "comments")
+@Document(value = "comments")
 public class Comment {
     @Id
     ObjectId id;
@@ -40,8 +41,8 @@ public class Comment {
     @NotNull
     @CreatedDate
     LocalDateTime updateDate;
-    Long likes;
-    List<Long> likedUsersId;
+    Integer likes;
+    List<Long> likedUsersId = new ArrayList<>();
     @NotNull
     Boolean deleted;
 
