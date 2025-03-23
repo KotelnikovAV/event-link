@@ -139,7 +139,7 @@ public class EventServiceImpl implements EventService {
 
         PageRequest pageRequest = PageRequest.of(page, size);
         BooleanExpression byUserId = event.initiatorId.eq(userId);
-        Page<Event> pageEvents = eventRepository.findAll(byUserId, pageRequest);
+        Page<Event> pageEvents = eventRepository.findAllWithPredicateAndPageable(byUserId, pageRequest);
         List<Event> events = pageEvents.getContent();
         setRating(events);
 
@@ -249,9 +249,6 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
-        List<ParticipationRequestDto> confirmedRequests = requestClient
-                .findAllRequestsByEventId(eventId, Status.CONFIRMED.name());
-
         if (event.getParticipantLimit() != 0 && event.getParticipantLimit().equals(event.getConfirmedRequests())) {
             throw new RestrictionsViolationException("The limit on applications for this event has been reached");
         }
@@ -312,7 +309,7 @@ public class EventServiceImpl implements EventService {
         }
 
         if (builder.getValue() != null) {
-            events = eventRepository.findAll(builder.getValue(), pageRequest);
+            events = eventRepository.findAllWithPredicateAndPageable(builder.getValue(), pageRequest);
         } else {
             events = eventRepository.findAll(pageRequest);
         }
@@ -374,7 +371,7 @@ public class EventServiceImpl implements EventService {
         }
 
         if (builder.getValue() != null) {
-            pageEvents = eventRepository.findAll(builder.getValue(), pageRequest);
+            pageEvents = eventRepository.findAllWithPredicateAndPageable(builder.getValue(), pageRequest);
         } else {
             pageEvents = eventRepository.findAll(pageRequest);
         }

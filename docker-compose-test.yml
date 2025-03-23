@@ -1,136 +1,15 @@
 services:
-  mongo1:
-    image: mongo:6.0
-    container_name: mongo1
+  event-db:
+    image: postgres:16.1
+    container_name: postgres-el-event-db
     ports:
-      - "27017:27017"
-    command: mongod --replSet rs0 --bind_ip_all
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh --quiet || exit 1
-      interval: 5s
-      timeout: 10s
-      retries: 5
-    networks:
-      - el-net
-
-  mongo2:
-    image: mongo:6.0
-    container_name: mongo2
-    ports:
-      - "27018:27017"
-    command: mongod --replSet rs0 --bind_ip_all
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh --quiet || exit 1
-      interval: 5s
-      timeout: 10s
-      retries: 5
-    networks:
-      - el-net
-    depends_on:
-      mongo1:
-        condition: service_healthy
-
-  mongo3:
-    image: mongo:6.0
-    container_name: mongo3
-    ports:
-      - "27019:27017"
-    command: mongod --replSet rs0 --bind_ip_all
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh --quiet || exit 1
-      interval: 5s
-      timeout: 10s
-      retries: 5
-    networks:
-      - el-net
-    depends_on:
-      mongo2:
-        condition: service_healthy
-
-  mongo-init:
-    image: mongo:6.0
-    container_name: mongo-init
-    networks:
-      - el-net
-    depends_on:
-      mongo1:
-        condition: service_healthy
-      mongo2:
-        condition: service_healthy
-      mongo3:
-        condition: service_healthy
-    command: > 
-      mongosh --host mongo1 --eval 'rs.initiate({
-          _id: "rs0",
-          members: [
-            { _id: 0, host: "mongo1:27017" },
-            { _id: 1, host: "mongo2:27017" },
-            { _id: 2, host: "mongo3:27017" }
-          ]
-        })'      
-
-  el-comment-service:
-    build: core/comment-server
-    container_name: el-comment-service
-    depends_on:
-      config-server:
-        condition: service_healthy
-      mongo-init:
-        condition: service_completed_successfully
-    networks:
-      - el-net
+      - "5432:5432"
     environment:
-      - SPRING_DATA_MONGODB=mongodb://mongo1:27017,mongo2:27017,mongo3:27017/comments?replicaSet=rs0
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-      - SERVER_PORT=8097
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=root
+      - POSTGRES_DB=event-server
     healthcheck:
-      test: "curl --fail --silent localhost:8097/actuator/health | grep UP || exit 1"
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
       timeout: 5s
-      interval: 25s
-      retries: 10
-
-  discovery-server:
-    build: infra/discovery-server
-    container_name: discovery-server
-    ports:
-      - "8761:8761"
-    networks:
-      - el-net
-    healthcheck:
-      test: "curl --fail --silent discovery-server:8761/actuator/health | grep UP || exit 1"
-      timeout: 5s
-      interval: 20s
-      retries: 5
-
-  config-server:
-    build: infra/config-server
-    container_name: config-server
-    depends_on:
-      discovery-server:
-        condition: service_healthy
-    networks:
-      - el-net
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-      - SERVER_PORT=9091
-    healthcheck:
-      test: "curl --fail --silent config-server:9091/actuator/health | grep UP || exit 1"
-      timeout: 5s
-      interval: 30s
-      retries: 5
-
-  gateway-server:
-    build: infra/gateway-server
-    container_name: gateway-server
-    ports:
-      - "8080:8080"
-    depends_on:
-      config-server:
-        condition: service_healthy
-    networks:
-      - el-net
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-
-networks:
-  el-net:
+      interval: 10s
+      retries: 15

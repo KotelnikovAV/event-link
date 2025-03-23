@@ -47,6 +47,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     public CompilationDto updateCompilation(long compId, UpdateCompilationRequest request) {
         log.info("The beginning of the process of updating a compilation");
+
         Compilation compilation = compilationRepository.findById(compId).orElseThrow(
                 () -> new NotFoundException("Compilation with id " + compId + " not found"));
 
