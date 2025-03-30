@@ -25,10 +25,10 @@
 //import java.util.List;
 //
 //@SpringBootTest
-//public class EventServiceTest {
+//public class EventAdminServiceTest {
 //
 //    @Autowired
-//    private EventService eventService;
+//    private EventAdminService eventAdminService;
 //
 //    @Autowired
 //    private EventRepository eventRepository;
@@ -98,7 +98,7 @@
 //
 //        eventRepository.saveAll(events);
 //
-//        List<EventFullDto> events = eventService.findAllAdminEvents(List.of(1L, 2L, 3L),
+//        List<EventFullDto> events = eventAdminService.findAllAdminEvents(List.of(1L, 2L, 3L),
 //                State.PUBLISHED, null,
 //                null,
 //                null,

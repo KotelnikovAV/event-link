@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.eventlink.dto.event.EventFullDto;
 import ru.eventlink.dto.event.EventShortDto;
 import ru.eventlink.enums.EventPublicSort;
-import ru.eventlink.event.service.EventService;
+import ru.eventlink.event.service.EventPublicService;
 import ru.eventlink.utility.Constants;
 
 import java.time.LocalDateTime;
@@ -22,7 +22,7 @@ import java.util.List;
 @Validated
 @RequiredArgsConstructor
 public class EventPublicController {
-    private final EventService eventService;
+    private final EventPublicService eventPublicService;
 
     @GetMapping
     public List<EventShortDto> findAllPublicEvents(@RequestParam(required = false) String text,
@@ -39,13 +39,13 @@ public class EventPublicController {
                                                   @RequestParam(defaultValue = "0") @PositiveOrZero Integer page,
                                                   @RequestParam(defaultValue = "10") @Positive Integer size) {
         log.info("Get all public events by text {}", text);
-        return eventService.findAllPublicEvents(text, categories, paid,
+        return eventPublicService.findAllPublicEvents(text, categories, paid,
                 rangeStart, rangeEnd, onlyAvailable, sort, page, size);
     }
 
     @GetMapping("/{eventId}")
     public EventFullDto findPublicEventById(@PathVariable Long eventId) {
         log.info("Get public event by id {}", eventId);
-        return eventService.findPublicEventById(eventId);
+        return eventPublicService.findPublicEventById(eventId);
     }
 }

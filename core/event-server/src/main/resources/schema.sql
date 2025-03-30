@@ -48,3 +48,4 @@ create table if not exists compilations_events
 
 create index annotation_event ON events (LEFT(annotation, 1500));
 create index description_event ON events (LEFT(description, 1500));
+create index name_categories ON categories (LOWER(name));

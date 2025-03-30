@@ -1,31 +1,23 @@
 package ru.eventlink.event.service;
 
-import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import ru.eventlink.category.model.Category;
 import ru.eventlink.category.repository.CategoryRepository;
 import ru.eventlink.client.RecommendationsClient;
-import ru.eventlink.client.StatClient;
 import ru.eventlink.client.UserActionClient;
 import ru.eventlink.client.requests.RequestClient;
 import ru.eventlink.client.user.UserClient;
-import ru.eventlink.dto.ViewStatsDto;
 import ru.eventlink.dto.event.*;
 import ru.eventlink.dto.requests.EventRequestStatusUpdateRequestDto;
 import ru.eventlink.dto.requests.EventRequestStatusUpdateResultDto;
 import ru.eventlink.dto.requests.ParticipationRequestDto;
-import ru.eventlink.dto.user.UserShortDto;
-import ru.eventlink.enums.EventPublicSort;
 import ru.eventlink.enums.State;
-import ru.eventlink.enums.StateActionAdmin;
 import ru.eventlink.enums.Status;
 import ru.eventlink.event.mapper.EventMapper;
 import ru.eventlink.event.mapper.LocationMapper;
@@ -39,30 +31,42 @@ import ru.eventlink.stats.proto.ActionTypeProto;
 import ru.eventlink.stats.proto.RecommendedEventProto;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static ru.eventlink.constants.Constants.FORMATTER;
 import static ru.eventlink.event.model.QEvent.event;
-import static ru.eventlink.utility.Constants.*;
+import static ru.eventlink.utility.Constants.MAXIMUM_SIZE_OF_THE_RECOMMENDATION_LIST;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
-public class EventServiceImpl implements EventService {
+public class EventPrivateServiceImpl extends EventServiceBase implements EventPrivateService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
-    private final StatClient statClient;
     private final UserClient userClient;
     private final RequestClient requestClient;
     private final EventMapper eventMapper;
     private final LocationMapper locationMapper;
     private final RecommendationsMapper recommendationsMapper;
-    private final RecommendationsClient recommendationsClient;
     private final UserActionClient userActionClient;
+
+    public EventPrivateServiceImpl(EventRepository eventRepository,
+                                   CategoryRepository categoryRepository,
+                                   UserClient userClient,
+                                   RequestClient requestClient,
+                                   EventMapper eventMapper,
+                                   LocationMapper locationMapper,
+                                   RecommendationsMapper recommendationsMapper,
+                                   UserActionClient userActionClient,
+                                   RecommendationsClient recommendationsClient) {
+        super(recommendationsClient);
+        this.eventRepository = eventRepository;
+        this.categoryRepository = categoryRepository;
+        this.userClient = userClient;
+        this.eventMapper = eventMapper;
+        this.locationMapper = locationMapper;
+        this.recommendationsMapper = recommendationsMapper;
+        this.userActionClient = userActionClient;
+        this.requestClient = requestClient;
+    }
 
     @Transactional
     @Override
@@ -274,198 +278,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventShortDto> findAllPublicEvents(String text, List<Long> categories, Boolean paid,
-                                                   LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                                   boolean onlyAvailable, EventPublicSort sort, int page, int size) {
-        log.info("The beginning of the process of finding a events by public");
-
-        if ((rangeStart != null) && (rangeEnd != null) && (rangeStart.isAfter(rangeEnd))) {
-            throw new DataTimeException("Start time after end time");
-        }
-        Page<Event> events;
-        PageRequest pageRequest = getCustomPage(page, size, sort);
-        BooleanBuilder builder = new BooleanBuilder();
-
-        if (text != null) {
-            builder.and(event.annotation.containsIgnoreCase(text.toLowerCase())
-                    .or(event.description.containsIgnoreCase(text.toLowerCase())));
-        }
-
-        if (!CollectionUtils.isEmpty(categories)) {
-            builder.and(event.category.id.in(categories));
-        }
-
-        if (rangeStart != null && rangeEnd != null) {
-            builder.and(event.eventDate.between(rangeStart, rangeEnd));
-        } else if (rangeStart == null && rangeEnd != null) {
-            builder.and(event.eventDate.between(LocalDateTime.MIN, rangeEnd));
-        } else if (rangeStart != null) {
-            builder.and(event.eventDate.between(rangeStart, LocalDateTime.MAX));
-        }
-
-        if (onlyAvailable) {
-            builder.and(event.participantLimit.eq(0L))
-                    .or(event.participantLimit.gt(event.confirmedRequests));
-        }
-
-        if (builder.getValue() != null) {
-            events = eventRepository.findAllWithPredicateAndPageable(builder.getValue(), pageRequest);
-        } else {
-            events = eventRepository.findAll(pageRequest);
-        }
-
-        setRating(events.getContent());
-        log.info("The events was found by public");
-        return eventMapper.listEventToListEventShortDto(events.getContent());
-    }
-
-    @Override
-    public EventFullDto findPublicEventById(long id) {
-        log.info("The beginning of the process of finding a event by public");
-
-        Event event = eventRepository.findByIdAndState(id, State.PUBLISHED)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));
-
-        setRating(List.of(event));
-        log.info("The event was found by public");
-        return eventMapper.eventToEventFullDto(event);
-    }
-
-    @Override
-    public List<EventFullDto> findAllAdminEvents(List<Long> users, State state, List<Long> categories,
-                                                 LocalDateTime rangeStart, LocalDateTime rangeEnd, int page,
-                                                 int size, boolean sortRating) {
-        log.info("The beginning of the process of finding a events by admin");
-        Page<Event> pageEvents;
-        PageRequest pageRequest;
-
-        if (sortRating) {
-            pageRequest = getCustomPage(page, size, EventPublicSort.LIKES);
-        } else {
-            pageRequest = getCustomPage(page, size, null);
-        }
-
-        BooleanBuilder builder = new BooleanBuilder();
-
-        if (!CollectionUtils.isEmpty(users) && !users.contains(0L)) {
-            builder.and(event.initiatorId.in(users));
-        }
-
-        if (state != null) {
-            builder.and(event.state.eq(state));
-        }
-
-        if (!CollectionUtils.isEmpty(categories) && !categories.contains(0L)) {
-            builder.and(event.category.id.in(categories));
-        }
-
-        if (rangeStart != null && rangeEnd != null) {
-            if (rangeStart.isAfter(rangeEnd)) {
-                throw new DataTimeException("Start time after end time");
-            }
-            builder.and(event.eventDate.between(rangeStart, rangeEnd));
-        } else if (rangeStart == null && rangeEnd != null) {
-            builder.and(event.eventDate.between(LocalDateTime.MIN, rangeEnd));
-        } else if (rangeStart != null) {
-            builder.and(event.eventDate.between(rangeStart, LocalDateTime.MAX));
-        }
-
-        if (builder.getValue() != null) {
-            pageEvents = eventRepository.findAllWithPredicateAndPageable(builder.getValue(), pageRequest);
-        } else {
-            pageEvents = eventRepository.findAll(pageRequest);
-        }
-
-        List<Event> events = pageEvents.getContent();
-        setRating(events);
-        log.info("The events was found by admin");
-        return eventMapper.listEventToListEventFullDto(events);
-    }
-
-    @Transactional
-    @Override
-    public EventFullDto updateEventAdmin(UpdateEventAdminRequest updateEvent, long eventId) {
-        log.info("The beginning of the process of updates a event by admin");
-
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
-
-        if (updateEvent.getAnnotation() != null && !updateEvent.getAnnotation().isBlank()) {
-            event.setAnnotation(updateEvent.getAnnotation());
-        }
-        if (updateEvent.getCategory() != null) {
-            Category category = categoryRepository.findById(updateEvent.getCategory())
-                    .orElseThrow(() -> new NotFoundException("Category with id=" + updateEvent.getCategory()
-                            + " was not found"));
-            event.setCategory(category);
-        }
-        if (updateEvent.getDescription() != null && !updateEvent.getDescription().isBlank()) {
-            event.setDescription(updateEvent.getDescription());
-        }
-        if (updateEvent.getEventDate() != null) {
-            if (updateEvent.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
-                throw new DataTimeException("The date and time for which the event is scheduled cannot be " +
-                        "earlier than two hours from the current moment");
-            } else {
-                event.setEventDate(updateEvent.getEventDate());
-            }
-        }
-        if (updateEvent.getLocation() != null) {
-            event.setLocation(locationMapper.locationDtoToLocation(updateEvent.getLocation()));
-        }
-        if (updateEvent.getPaid() != null) {
-            event.setPaid(updateEvent.getPaid());
-        }
-        if (updateEvent.getParticipantLimit() != null) {
-            event.setParticipantLimit(updateEvent.getParticipantLimit());
-        }
-        if (updateEvent.getRequestModeration() != null) {
-            event.setRequestModeration(updateEvent.getRequestModeration());
-        }
-        if (updateEvent.getTitle() != null && !updateEvent.getTitle().isBlank()) {
-            event.setTitle(updateEvent.getTitle());
-        }
-        if (updateEvent.getStateAction() != null) {
-            setStateByAdmin(event, updateEvent.getStateAction());
-        }
-
-        log.info("The events was update by admin");
-        return eventMapper.eventToEventFullDto(event);
-    }
-
-    @Override
-    public boolean findExistEventByEventIdAndInitiatorId(Long eventId, Long initiatorId) {
-        log.info("The beginning of the process of finding existence events");
-        return eventRepository.existsByIdAndInitiatorId(eventId, initiatorId);
-    }
-
-    @Override
-    public EventFullDto findEventById(Long eventId) {
-        log.info("The beginning of the process of finding state events");
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
-        EventFullDto eventFullDto = eventMapper.eventToEventFullDto(event);
-        eventFullDto.setInitiator(new UserShortDto(event.getInitiatorId(), null));
-        return eventFullDto;
-    }
-
-    @Override
-    public boolean findExistEventByEventId(Long eventId) {
-        log.info("The beginning of the process of finding existence events");
-        return eventRepository.existsById(eventId);
-    }
-
-    @Override
-    @Transactional
-    public void updateRatingEvent(Long eventId, int rating) {
-        log.info("The beginning of the process of updating rating");
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
-        event.setLikes(event.getLikes() + rating);
-        log.info("The updated rating");
-    }
-
-    @Override
     public List<RecommendationsDto> findRecommendations(long userId) {
         log.info("The beginning of the process of finding recommendations");
 
@@ -478,78 +290,6 @@ public class EventServiceImpl implements EventService {
 
         log.info("The recommendations found");
         return recommendationsMapper.listRecommendedEventProtoToListRecommendationsDto(recommendations);
-    }
-
-    private void setStateByAdmin(Event event, StateActionAdmin stateActionAdmin) {
-        if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1)) &&
-                stateActionAdmin.equals(StateActionAdmin.PUBLISH_EVENT)) {
-            throw new DataTimeException("The start date of the event to be modified must be no earlier " +
-                    "than one hour from the date of publication.");
-        }
-
-        if (stateActionAdmin.equals(StateActionAdmin.PUBLISH_EVENT)) {
-            if (!event.getState().equals(State.PENDING)) {
-                throw new RestrictionsViolationException("An event can be published only if it is in the waiting state " +
-                        "for publication");
-            }
-            event.setState(State.PUBLISHED);
-            event.setPublishedOn(LocalDateTime.now());
-        } else {
-            if (event.getState().equals(State.PUBLISHED)) {
-                throw new RestrictionsViolationException("AAn event can be rejected only if it has not been " +
-                        "published yet");
-            }
-            event.setState(State.CANCELED);
-        }
-
-    }
-
-    private PageRequest getCustomPage(int page, int size, EventPublicSort sort) {
-        if (sort != null) {
-            return switch (sort) {
-                case EVENT_DATE -> PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "eventDate"));
-                case VIEWS -> PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "views"));
-                case LIKES -> PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "likes"));
-            };
-        } else {
-            return PageRequest.of(page, size);
-        }
-
-    }
-
-    private List<ViewStatsDto> getViewStats(List<Event> events) {
-        List<String> url = events.stream()
-                .map(event -> ACTUAL_VERSION_EVENT_SERVER + "/events/" + event.getId())
-                .toList();
-
-        Optional<List<ViewStatsDto>> viewStatsDto = Optional.ofNullable(statClient
-                .findByParams(DEFAULT_SEARCH_START_DATE.format(FORMATTER),
-                        LocalDateTime.now().format(FORMATTER),
-                        url,
-                        true)
-        );
-        return viewStatsDto.orElse(Collections.emptyList());
-    }
-
-    private void setRating(List<Event> events) {
-        if (CollectionUtils.isEmpty(events)) {
-            return;
-        }
-
-        List<Long> eventsId = events.stream()
-                .map(Event::getId)
-                .toList();
-
-        List<RecommendedEventProto> ratingEvents = recommendationsClient.getInteractionsCount(eventsId);
-
-        if (CollectionUtils.isEmpty(ratingEvents)) {
-            return;
-        }
-
-        Map<Long, Double> mapEventsIdRating = ratingEvents.stream()
-                .collect(Collectors.toMap(RecommendedEventProto::getEventId, RecommendedEventProto::getScore));
-
-        events.forEach(event -> event.setRating(mapEventsIdRating.getOrDefault(event.getId(), 0.0)));
     }
 
     private EventRequestStatusUpdateResultDto createEventRequestStatusUpdateResult(List<ParticipationRequestDto> requests) {
