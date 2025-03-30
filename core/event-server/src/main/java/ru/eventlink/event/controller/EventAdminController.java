@@ -11,7 +11,7 @@ import ru.eventlink.client.event.EventClient;
 import ru.eventlink.dto.event.EventFullDto;
 import ru.eventlink.dto.event.UpdateEventAdminRequest;
 import ru.eventlink.enums.State;
-import ru.eventlink.event.service.EventService;
+import ru.eventlink.event.service.EventAdminService;
 import ru.eventlink.utility.Constants;
 
 import java.time.LocalDateTime;
@@ -22,7 +22,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class EventAdminController implements EventClient {
-    private final EventService eventService;
+    private final EventAdminService eventAdminService;
 
     @GetMapping
     @Override
@@ -40,7 +40,7 @@ public class EventAdminController implements EventClient {
                                                  @RequestParam(defaultValue = "true") Boolean sortRating) {
         log.info("Get all admin events by users {}, state {}, categories {}, rangeStart {}, rangeEnd {}, page {}, " +
                 "size {}, sortRating {}", users, states, categories, rangeStart, rangeEnd, page, size, sortRating);
-        return eventService.findAllAdminEvents(users, states, categories, rangeStart, rangeEnd, page, size, sortRating);
+        return eventAdminService.findAllAdminEvents(users, states, categories, rangeStart, rangeEnd, page, size, sortRating);
     }
 
     @PatchMapping("/{eventId}")
@@ -49,14 +49,14 @@ public class EventAdminController implements EventClient {
                                          @PathVariable long eventId) {
         log.info("Received a PATCH request to update event with an eventId = {} request body {}",
                 eventId, updateEventAdminRequest);
-        return eventService.updateEventAdmin(updateEventAdminRequest, eventId);
+        return eventAdminService.updateEventAdmin(updateEventAdminRequest, eventId);
     }
 
     @GetMapping("/{eventId}")
     @Override
     public EventFullDto findEventById(@PathVariable Long eventId) {
         log.info("Get event by id {}", eventId);
-        return eventService.findEventById(eventId);
+        return eventAdminService.findEventById(eventId);
     }
 
     @GetMapping("/{eventId}/existence/{initiatorId}")
@@ -64,14 +64,14 @@ public class EventAdminController implements EventClient {
     public boolean findExistEventByEventIdAndInitiatorId(@PathVariable @Positive Long eventId,
                                                          @PathVariable @Positive Long initiatorId) {
         log.info("Get existence event by eventId {} and initiatorId {}", eventId, initiatorId);
-        return eventService.findExistEventByEventIdAndInitiatorId(eventId, initiatorId);
+        return eventAdminService.findExistEventByEventIdAndInitiatorId(eventId, initiatorId);
     }
 
     @GetMapping("/{eventId}/existence/")
     @Override
     public boolean findExistEventByEventId(@PathVariable @Positive Long eventId) {
         log.info("Get existence event by eventId {}", eventId);
-        return eventService.findExistEventByEventId(eventId);
+        return eventAdminService.findExistEventByEventId(eventId);
     }
 
     @PutMapping("/{eventId}")
@@ -79,6 +79,6 @@ public class EventAdminController implements EventClient {
     public void updateRatingEvent(@PathVariable long eventId,
                                   @RequestParam int rating) {
         log.info("Update event rating {}", rating);
-        eventService.updateRatingEvent(eventId, rating);
+        eventAdminService.updateRatingEvent(eventId, rating);
     }
 }

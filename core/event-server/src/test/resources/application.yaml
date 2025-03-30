@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: comment-server-test
+  config:
+    import: optional:classpath:application-test.yaml
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  sql:
+    init:
+      mode: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/event-server
+    username: root
+    password: root
+  cloud:
+    config:
+      enabled: false
+    discovery:
+        enabled: false
+
+server:
+  port: 8080
+

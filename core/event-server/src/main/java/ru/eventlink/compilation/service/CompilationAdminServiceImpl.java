@@ -2,7 +2,6 @@ package ru.eventlink.compilation.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -20,14 +19,14 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
-public class CompilationServiceImpl implements CompilationService {
+public class CompilationAdminServiceImpl implements CompilationAdminService {
     private final CompilationRepository compilationRepository;
     private final CompilationMapper compilationMapper;
     private final EventRepository eventRepository;
 
     @Override
+    @Transactional
     public CompilationDto addCompilation(NewCompilationDto compilationDto) {
         log.info("The beginning of the process of creating a compilation");
         Compilation compilation = compilationMapper.newCompilationDtoToCompilation(compilationDto);
@@ -45,8 +44,10 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional
     public CompilationDto updateCompilation(long compId, UpdateCompilationRequest request) {
         log.info("The beginning of the process of updating a compilation");
+
         Compilation compilation = compilationRepository.findById(compId).orElseThrow(
                 () -> new NotFoundException("Compilation with id " + compId + " not found"));
 
@@ -63,43 +64,16 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional
     public void deleteCompilation(long compId) {
         log.info("The beginning of the process of deleting a compilation");
-        compilationRepository.findById(compId).orElseThrow(
-                () -> new NotFoundException("Compilation with id " + compId + " not found"));
-        compilationRepository.deleteById(compId);
-        log.info("The compilation has been deleted");
-    }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<CompilationDto> getAllCompilations(Boolean pinned, int page, int size) {
-        log.info("The beginning of the process of finding a all compilations");
-        PageRequest pageRequest = PageRequest.of(page, size);
-        List<CompilationDto> compilationsDto;
-
-        if (pinned == null) {
-            compilationsDto = compilationMapper.listCompilationToListCompilationDto(compilationRepository
-                    .findAll(pageRequest).getContent());
-        } else if (pinned) {
-            compilationsDto = compilationMapper.listCompilationToListCompilationDto(
-                    compilationRepository.findAllByPinnedTrue(pageRequest).getContent());
+        if (compilationRepository.existsById(compId)) {
+            compilationRepository.deleteById(compId);
         } else {
-            compilationsDto = compilationMapper.listCompilationToListCompilationDto(
-                    compilationRepository.findAllByPinnedFalse(pageRequest).getContent());
+            throw new NotFoundException("Compilation with id " + compId + " not found");
         }
 
-        log.info("The all compilations has been found");
-        return compilationsDto;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CompilationDto getCompilationById(long compId) {
-        log.info("The beginning of the process of finding a all compilations by id");
-        Compilation compilation = compilationRepository.findById(compId).orElseThrow(
-                () -> new NotFoundException("Compilation with id " + compId + " not found"));
-        log.info("The all compilations by id has been found");
-        return compilationMapper.compilationToCompilationDto(compilation);
+        log.info("The compilation has been deleted");
     }
 }

@@ -2,16 +2,10 @@ package ru.eventlink.category.service;
 
 import ru.eventlink.category.model.Category;
 
-import java.util.List;
-
-public interface CategoryService {
+public interface CategoryAdminService {
     Category addCategory(Category category);
 
     void deleteCategory(long catId);
 
     Category updateCategory(long catId, Category category);
-
-    List<Category> getAllCategories(int page, int size);
-
-    Category getCategory(long catId);
 }

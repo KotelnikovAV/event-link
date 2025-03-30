@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.eventlink.compilation.service.CompilationService;
+import ru.eventlink.compilation.service.CompilationPublicService;
 import ru.eventlink.dto.compilation.CompilationDto;
 
 import java.util.List;
@@ -17,19 +17,19 @@ import java.util.List;
 @Validated
 @Slf4j
 public class CompilationPublicController {
-    private final CompilationService compilationService;
+    private final CompilationPublicService compilationPublicService;
 
     @GetMapping
     public List<CompilationDto> getAllCompilations(@RequestParam(required = false) Boolean pinned,
                                                    @RequestParam(defaultValue = "0") @PositiveOrZero Integer page,
                                                    @RequestParam(defaultValue = "10") @Positive Integer size) {
         log.info("getAllCompilations with pinned={}, page={}, size={}", pinned, page, size);
-        return compilationService.getAllCompilations(pinned, page, size);
+        return compilationPublicService.getAllCompilations(pinned, page, size);
     }
 
     @GetMapping("/{compId}")
     public CompilationDto getCompilationById(@PathVariable Long compId) {
         log.info("getCompilationById {}", compId);
-        return compilationService.getCompilationById(compId);
+        return compilationPublicService.getCompilationById(compId);
     }
 }
