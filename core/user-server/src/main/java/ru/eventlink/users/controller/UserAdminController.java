@@ -1,4 +1,4 @@
-package ru.eventlink.controller;
+package ru.eventlink.users.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.eventlink.client.user.UserClient;
 import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.dto.user.UserRequestDto;
-import ru.eventlink.service.UserService;
+import ru.eventlink.users.service.UserService;
 
 import java.util.List;
 

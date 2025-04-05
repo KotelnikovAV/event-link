@@ -4,7 +4,7 @@ create table if not exists categories
 (
     id   bigint         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name varchar(100)   NOT NULL
-    );
+);
 
 create table if not exists location
 (

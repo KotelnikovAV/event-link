@@ -1,4 +1,4 @@
-package ru.eventlink.service;
+package ru.eventlink.users.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,9 +11,9 @@ import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.dto.user.UserRequestDto;
 import ru.eventlink.exception.IntegrityViolationException;
 import ru.eventlink.exception.NotFoundException;
-import ru.eventlink.mapper.UserMapper;
-import ru.eventlink.model.User;
-import ru.eventlink.repository.UserRepository;
+import ru.eventlink.users.mapper.UserMapper;
+import ru.eventlink.users.model.User;
+import ru.eventlink.users.repository.UserRepository;
 
 import java.util.List;
 
@@ -27,6 +27,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> getAllUsers(List<Long> ids, int page, int size) {
         log.info("The beginning of the process of finding all users");
+
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id"));
         List<User> users;
 
@@ -43,8 +44,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> getAllUsersBySortRating(int page, int size) {
         log.info("The beginning of the process of finding all users by sort rating");
+
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "rating"));
         List<User> users = userRepository.findAll(pageRequest).getContent();
+
         log.info("The user by sort rating has been found");
         return userMapper.listUserToListUserDto(users);
     }
@@ -53,12 +56,16 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto createUser(UserRequestDto requestDto) {
         log.info("The beginning of the process of creating a user");
+
         User user = userMapper.userRequestDtoToUser(requestDto);
         userRepository.findUserByEmail(user.getEmail()).ifPresent(u -> {
             throw new IntegrityViolationException("User with email " + u.getEmail() + " already exists");
         });
-        user.setRating(0L);
+        user.setRating(0);
+        user.setCountFollowers(0);
+        user.setCountFriends(0);
         userRepository.save(user);
+
         log.info("The user has been created");
         return userMapper.userToUserDto(user);
     }

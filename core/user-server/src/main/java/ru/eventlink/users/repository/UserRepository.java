@@ -1,9 +1,9 @@
-package ru.eventlink.repository;
+package ru.eventlink.users.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
-import ru.eventlink.model.User;
+import ru.eventlink.users.model.User;
 
 import java.util.List;
 import java.util.Optional;

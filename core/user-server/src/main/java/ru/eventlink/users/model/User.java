@@ -1,4 +1,4 @@
-package ru.eventlink.model;
+package ru.eventlink.users.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -31,7 +31,15 @@ public class User {
 
     @NotNull
     @Column
-    Long rating;
+    Integer rating;
+
+    @NotNull
+    @Column
+    Integer countFollowers;
+
+    @NotNull
+    @Column
+    Integer countFriends;
 
     @Override
     public final boolean equals(Object o) {
@@ -47,14 +55,5 @@ public class User {
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "(" +
-                "id = " + id + ", " +
-                "email = " + email + ", " +
-                "name = " + name + ", " +
-                "rating = " + rating + ")";
     }
 }

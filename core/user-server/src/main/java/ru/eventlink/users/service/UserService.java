@@ -1,4 +1,4 @@
-package ru.eventlink.service;
+package ru.eventlink.users.service;
 
 import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.dto.user.UserRequestDto;
