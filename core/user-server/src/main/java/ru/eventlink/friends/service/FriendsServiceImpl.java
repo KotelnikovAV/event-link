@@ -2,18 +2,24 @@ package ru.eventlink.friends.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.eventlink.dto.friends.FollowUserDto;
 import ru.eventlink.dto.friends.FriendUserDto;
+import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.exception.NotFoundException;
 import ru.eventlink.exception.RestrictionsViolationException;
+import ru.eventlink.friends.mapper.FriendsMapper;
 import ru.eventlink.friends.model.Friends;
 import ru.eventlink.friends.model.FriendsPK;
 import ru.eventlink.friends.repository.FriendsRepository;
 import ru.eventlink.users.model.User;
 import ru.eventlink.users.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -22,6 +28,7 @@ import java.util.List;
 public class FriendsServiceImpl implements FriendsService {
     private final FriendsRepository friendsRepository;
     private final UserRepository userRepository;
+    private final FriendsMapper friendsMapper;
 
     @Override
     @Transactional
@@ -86,22 +93,68 @@ public class FriendsServiceImpl implements FriendsService {
     }
 
     @Override
-    public void confirmRequest(long user1Id, long user2Id) {
+    @Transactional
+    public void confirmRequest(long senderId, long receiverId) {
+        log.info("confirmRequest: user1Id: {}, user2Id: {}", senderId, receiverId);
 
+        Friends friends = friendsRepository.findById(createFriendsPK(senderId, receiverId))
+                .orElseThrow(() ->
+                        new NotFoundException("There is no friendship between users: " + senderId + " and " + receiverId));
+
+        if (!friends.getInitiatorId().equals(receiverId)) {
+            throw new RestrictionsViolationException("The user cannot confirm the request by himself");
+        } else if (friends.getConfirmed()) {
+            throw new RestrictionsViolationException("This user is already in the friends list");
+        }
+
+        User user1 = friends.getUser1();
+        User user2 = friends.getUser2();
+
+        friends.setConfirmed(true);
+        friends.setConfirmationDate(LocalDateTime.now());
+
+        user1.setCountFriends(user1.getCountFriends() + 1);
+        user2.setCountFriends(user2.getCountFriends() + 1);
+
+        if (user1.getId().equals(friends.getInitiatorId())) {
+            user2.setCountFollowers(user2.getCountFollowers() - 1);
+        } else if (user2.getId().equals(friends.getInitiatorId())) {
+            user1.setCountFollowers(user1.getCountFollowers() - 1);
+        }
+
+        log.info("Request has been successfully confirmed");
     }
 
     @Override
-    public List<FollowUserDto> findAllFollowers(long userId, int page, int size) {
-        return List.of();
+    public List<FollowUserDto> findAllFollowers(long senderId, int page, int size) {
+        log.info("findAllFollowers: senderId: {}, page: {}, size: {}", senderId, page, size);
+
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "request_date"));
+
+        Page<Friends> followers = friendsRepository.findAllFollowersByUserId(pageRequest, senderId);
+        List<Friends> followersList = getOutListFriends(followers, senderId);
+        List<FollowUserDto> followersDto = friendsMapper.listFriendsToListFollowUserDto(followersList);
+
+        log.info("List of followers found");
+        return followersDto;
     }
 
     @Override
-    public List<FriendUserDto> findAllFriends(long userId, int page, int size) {
-        return List.of();
+    public List<FriendUserDto> findAllFriends(long senderId, int page, int size) {
+        log.info("findAllFriends: senderId: {}, page: {}, size: {}", senderId, page, size);
+
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "confirmation_date"));
+
+        Page<Friends> friends = friendsRepository.findAllFriendsByUserId(pageRequest, senderId);
+        List<Friends> friendsList = getOutListFriends(friends, senderId);
+        List<FriendUserDto> friendsDto = friendsMapper.listFriendsToListFriendUserDto(friendsList);
+
+        log.info("List of friends found");
+        return friendsDto;
     }
 
     @Override
-    public List<FollowUserDto> findAllUserFollow(long userId, int page, int size) {
+    public List<UserDto> findRecommendationFriends(long userId, int page, int size) {
         return List.of();
     }
 
@@ -111,5 +164,17 @@ public class FriendsServiceImpl implements FriendsService {
         } else {
             return new FriendsPK(user2Id, user1Id);
         }
+    }
+
+    private List<Friends> getOutListFriends(Page<Friends> friends, Long userId) {
+        List<Friends> followersList = friends.getContent();
+        followersList.forEach(friend -> {
+            if (friend.getUser1().getId().equals(userId)) {
+                friend.setUser1(null);
+            } else if (friend.getUser2().getId().equals(userId)) {
+                friend.setUser2(null);
+            }
+        });
+        return followersList;
     }
 }

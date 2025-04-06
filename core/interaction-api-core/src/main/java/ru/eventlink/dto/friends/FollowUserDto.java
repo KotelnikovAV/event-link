@@ -1,6 +1,7 @@
 package ru.eventlink.dto.friends;
 
 import lombok.*;
+import ru.eventlink.dto.user.UserDto;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +11,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class FollowUserDto {
-    private Long userId;
+    private UserDto user;
     private LocalDateTime requestDate;
 }

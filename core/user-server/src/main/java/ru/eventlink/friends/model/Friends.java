@@ -22,12 +22,12 @@ public class Friends {
     @EmbeddedId
     private FriendsPK id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @MapsId("user1Id")
     @JoinColumn(name = "user1_id")
     private User user1;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @MapsId("user2Id")
     @JoinColumn(name = "user2_id")
     private User user2;
