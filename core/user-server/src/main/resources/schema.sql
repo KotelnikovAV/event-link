@@ -23,3 +23,6 @@ create table if not exists friends
     CHECK (user1_id <> user2_id)
     CHECK (initiator_id = user1_id OR initiator_id = user2_id)
 );
+
+CREATE INDEX idx_friends_user1 ON friends (user1_id);
+CREATE INDEX idx_friends_user2 ON friends (user2_id);

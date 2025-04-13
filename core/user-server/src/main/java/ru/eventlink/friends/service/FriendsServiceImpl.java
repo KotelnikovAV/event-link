@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.eventlink.dto.friends.FollowUserDto;
 import ru.eventlink.dto.friends.FriendUserDto;
-import ru.eventlink.dto.user.UserDto;
+import ru.eventlink.dto.friends.RecommendedUserDto;
 import ru.eventlink.exception.NotFoundException;
 import ru.eventlink.exception.RestrictionsViolationException;
 import ru.eventlink.friends.mapper.FriendsMapper;
@@ -154,8 +154,15 @@ public class FriendsServiceImpl implements FriendsService {
     }
 
     @Override
-    public List<UserDto> findRecommendationFriends(long userId, int page, int size) {
-        return List.of();
+    public List<RecommendedUserDto> findRecommendationFriends(long userId, int page, int size) {
+        log.info("findRecommendationFriends: userId: {}, page: {}, size: {}", userId, page, size);
+
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "common_friends_count"));
+
+        Page<RecommendedUserDto> recommendations = friendsRepository.findFriendRecommendations(pageRequest, userId);
+
+        log.info("List of recommendations found");
+        return recommendations.getContent();
     }
 
     private FriendsPK createFriendsPK(long user1Id, long user2Id) {

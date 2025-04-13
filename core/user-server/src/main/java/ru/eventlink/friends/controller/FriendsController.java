@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.eventlink.dto.friends.FollowUserDto;
 import ru.eventlink.dto.friends.FriendUserDto;
+import ru.eventlink.dto.friends.RecommendedUserDto;
 import ru.eventlink.friends.service.FriendsService;
 
 import java.util.List;
@@ -52,5 +53,13 @@ public class FriendsController {
                                               @RequestParam(defaultValue = "10") @Positive int size) {
         log.info("Search for all friends of a user with id = {}", senderId);
         return friendsService.findAllFriends(senderId, page, size);
+    }
+
+    @GetMapping("/friends/recommendations")
+    public List<RecommendedUserDto> findRecommendationFriends(@PathVariable @Positive long senderId,
+                                                              @RequestParam(defaultValue = "0") @PositiveOrZero int page,
+                                                              @RequestParam(defaultValue = "10") @Positive int size) {
+        log.info("Search recommendations friends for user with id = {}", senderId);
+        return friendsService.findRecommendationFriends(senderId, page, size);
     }
 }

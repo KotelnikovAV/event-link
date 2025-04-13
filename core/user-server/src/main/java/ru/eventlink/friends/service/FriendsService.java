@@ -2,7 +2,7 @@ package ru.eventlink.friends.service;
 
 import ru.eventlink.dto.friends.FollowUserDto;
 import ru.eventlink.dto.friends.FriendUserDto;
-import ru.eventlink.dto.user.UserDto;
+import ru.eventlink.dto.friends.RecommendedUserDto;
 
 import java.util.List;
 
@@ -17,5 +17,5 @@ public interface FriendsService {
 
     List<FriendUserDto> findAllFriends(long senderId, int page, int size);
 
-    List<UserDto> findRecommendationFriends(long senderId, int page, int size);
+    List<RecommendedUserDto> findRecommendationFriends(long senderId, int page, int size);
 }
