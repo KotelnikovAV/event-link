@@ -35,16 +35,21 @@ public class FriendsServiceImpl implements FriendsService {
     public void addFriend(long senderId, long receiverId) {
         log.info("addFriend: user1Id: {}, user2Id: {}", senderId, receiverId);
 
+        checkUsersId(senderId, receiverId);
+
         User sender = userRepository.findById(senderId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + senderId + " not found"));
         User receiver = userRepository.findById(receiverId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + receiverId + " not found"));
 
-        if (friendsRepository.existsById(createFriendsPK(senderId, receiverId))) {
+        FriendsPK friendsPK = createFriendsPK(senderId, receiverId);
+
+        if (friendsRepository.existsById(friendsPK)) {
             throw new RestrictionsViolationException("A friend request has already been sent to this user.");
         }
 
         Friends friends = new Friends();
+        friends.setId(friendsPK);
         friends.setUser1(sender);
         friends.setUser2(receiver);
         friends.setInitiatorId(senderId);
@@ -61,6 +66,8 @@ public class FriendsServiceImpl implements FriendsService {
     public void removeFriend(long senderId, long receiverId) {
         log.info("removeFriend: user1Id: {}, user2Id: {}", senderId, receiverId);
 
+        checkUsersId(senderId, receiverId);
+
         Friends friends = friendsRepository.findById(createFriendsPK(senderId, receiverId))
                 .orElseThrow(() ->
                         new NotFoundException("There is no friendship between users: " + senderId + " and " + receiverId));
@@ -71,6 +78,7 @@ public class FriendsServiceImpl implements FriendsService {
         if (friends.getConfirmed()) {
             friends.setConfirmed(false);
             friends.setInitiatorId(receiverId);
+            friends.setRequestDate(null);
             user1.setCountFriends(user1.getCountFriends() - 1);
             user2.setCountFriends(user2.getCountFriends() - 1);
 
@@ -97,7 +105,10 @@ public class FriendsServiceImpl implements FriendsService {
     public void confirmRequest(long senderId, long receiverId) {
         log.info("confirmRequest: user1Id: {}, user2Id: {}", senderId, receiverId);
 
-        Friends friends = friendsRepository.findById(createFriendsPK(senderId, receiverId))
+        checkUsersId(senderId, receiverId);
+
+        FriendsPK friendsPK = createFriendsPK(senderId, receiverId);
+        Friends friends = friendsRepository.findById(friendsPK)
                 .orElseThrow(() ->
                         new NotFoundException("There is no friendship between users: " + senderId + " and " + receiverId));
 
@@ -129,7 +140,7 @@ public class FriendsServiceImpl implements FriendsService {
     public List<FollowUserDto> findAllFollowers(long senderId, int page, int size) {
         log.info("findAllFollowers: senderId: {}, page: {}, size: {}", senderId, page, size);
 
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "request_date"));
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "requestDate"));
 
         Page<Friends> followers = friendsRepository.findAllFollowersByUserId(pageRequest, senderId);
         List<Friends> followersList = getOutListFriends(followers, senderId);
@@ -143,7 +154,7 @@ public class FriendsServiceImpl implements FriendsService {
     public List<FriendUserDto> findAllFriends(long senderId, int page, int size) {
         log.info("findAllFriends: senderId: {}, page: {}, size: {}", senderId, page, size);
 
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "confirmation_date"));
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "confirmationDate"));
 
         Page<Friends> friends = friendsRepository.findAllFriendsByUserId(pageRequest, senderId);
         List<Friends> friendsList = getOutListFriends(friends, senderId);
@@ -183,5 +194,11 @@ public class FriendsServiceImpl implements FriendsService {
             }
         });
         return followersList;
+    }
+
+    private void checkUsersId(long senderId, long receiverId) {
+        if (senderId == receiverId) {
+            throw new RestrictionsViolationException("Friends can't be the same as the sender");
+        }
     }
 }

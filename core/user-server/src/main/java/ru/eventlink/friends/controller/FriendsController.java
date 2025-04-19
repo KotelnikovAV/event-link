@@ -23,19 +23,19 @@ public class FriendsController {
     @PostMapping("/friends/{receiverId}")
     @ResponseStatus(HttpStatus.CREATED)
     public void addFriend(@PathVariable @Positive long senderId, @PathVariable @Positive long receiverId) {
-        log.info("Adding friend {}", receiverId);
+        log.info("Adding friend with id = {}", receiverId);
         friendsService.addFriend(senderId, receiverId);
     }
 
     @DeleteMapping("/friends/{receiverId}")
     public void removeFriend(@PathVariable @Positive long senderId, @PathVariable @Positive long receiverId) {
-        log.info("Removing friend {}", receiverId);
+        log.info("Removing friend with id = {}", receiverId);
         friendsService.removeFriend(senderId, receiverId);
     }
 
     @PutMapping("/friends/{receiverId}")
     public void confirmRequest(@PathVariable @Positive long senderId, @PathVariable @Positive long receiverId) {
-        log.info("Confirming request {}", receiverId);
+        log.info("Confirming request from user with id = {}", senderId);
         friendsService.confirmRequest(senderId, receiverId);
     }
 

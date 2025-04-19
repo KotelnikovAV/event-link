@@ -45,7 +45,7 @@ public class Friends {
     private LocalDateTime confirmationDate;
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         if (!(initiatorId.equals(user1.getId()) || initiatorId.equals(user2.getId()))) {
             throw new RestrictionsViolationException("The initiator's id must be equal to user1 or user1");
         }
@@ -54,6 +54,9 @@ public class Friends {
             User temp = user1;
             user1 = user2;
             user2 = temp;
+
+            this.id.setUser1Id(user1.getId());
+            this.id.setUser2Id(user2.getId());
         }
 
         requestDate = LocalDateTime.now();
@@ -73,5 +76,11 @@ public class Friends {
     @Override
     public final int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "(" +
+                "EmbeddedId = " + id + ")";
     }
 }

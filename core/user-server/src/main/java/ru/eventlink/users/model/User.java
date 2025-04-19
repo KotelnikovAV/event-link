@@ -56,4 +56,15 @@ public class User {
     public final int hashCode() {
         return this instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "(" +
+                "id = " + id + ", " +
+                "email = " + email + ", " +
+                "name = " + name + ", " +
+                "rating = " + rating + ", " +
+                "countFollowers = " + countFollowers + ", " +
+                "countFriends = " + countFriends + ")";
+    }
 }

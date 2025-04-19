@@ -1,4 +1,4 @@
-drop table if exists users;
+drop table if exists users, friends;
 
 create table if not exists users
 (
@@ -19,8 +19,8 @@ create table if not exists friends
     request_date        TIMESTAMP       NOT NULL,
     confirmation_date   TIMESTAMP,
     PRIMARY KEY (user1_id, user2_id),
-    CHECK (user1_id < user2_id)
-    CHECK (user1_id <> user2_id)
+    CHECK (user1_id < user2_id),
+    CHECK (user1_id <> user2_id),
     CHECK (initiator_id = user1_id OR initiator_id = user2_id)
 );
 

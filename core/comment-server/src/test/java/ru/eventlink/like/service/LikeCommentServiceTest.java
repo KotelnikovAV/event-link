@@ -71,7 +71,9 @@ public class LikeCommentServiceTest {
                     .id(USER_ID + i)
                     .email("email" + i + "@email.com")
                     .name("name " + i)
-                    .rating(0L)
+                    .rating(0)
+                    .countFollowers(0)
+                    .countFriends(0)
                     .build();
 
             likeComments.add(likeComment);
