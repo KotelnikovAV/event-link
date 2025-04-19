@@ -1,4 +1,4 @@
-package ru.eventlink.model;
+package ru.eventlink.users.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -31,7 +31,15 @@ public class User {
 
     @NotNull
     @Column
-    Long rating;
+    Integer rating;
+
+    @NotNull
+    @Column
+    Integer countFollowers;
+
+    @NotNull
+    @Column
+    Integer countFriends;
 
     @Override
     public final boolean equals(Object o) {
@@ -55,6 +63,8 @@ public class User {
                 "id = " + id + ", " +
                 "email = " + email + ", " +
                 "name = " + name + ", " +
-                "rating = " + rating + ")";
+                "rating = " + rating + ", " +
+                "countFollowers = " + countFollowers + ", " +
+                "countFriends = " + countFriends + ")";
     }
 }

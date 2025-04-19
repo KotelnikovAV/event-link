@@ -15,7 +15,9 @@ public class UserDto {
     Long id;
     String email;
     String name;
-    Long rating;
+    Integer rating;
+    Integer countFollowers;
+    Integer countFriends;
 
     @Override
     public boolean equals(Object o) {

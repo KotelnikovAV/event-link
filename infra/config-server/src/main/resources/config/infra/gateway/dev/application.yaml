@@ -7,9 +7,6 @@ spring:
         enabled: true
     gateway:
       discovery.locator.enabled: true
-      httpclient:
-        connect-timeout: 3000
-        response-timeout: 10s
       routes:
         - id: event_server_circuitbreaker_route
           uri: lb://event-server
@@ -46,6 +43,13 @@ spring:
           filters:
             - PrefixPath=/api/v1
             - CircuitBreaker=CommentClient
+        - id: friends_route
+          uri: lb://user-server
+          predicates:
+            - Path=/users/{segment}/**
+          filters:
+            - PrefixPath=/api/v1
+
 
 resilience4j:
   circuitbreaker:

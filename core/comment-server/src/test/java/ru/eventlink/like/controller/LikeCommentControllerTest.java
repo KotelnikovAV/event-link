@@ -49,7 +49,9 @@ public class LikeCommentControllerTest {
                     .id((long) i)
                     .email("user" + i + "@example.com")
                     .name("name" + i)
-                    .rating(0L)
+                    .rating(0)
+                    .countFollowers(0)
+                    .countFriends(0)
                     .build();
             users.add(user);
         }
