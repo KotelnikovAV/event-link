@@ -5,7 +5,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.eventlink.comment.service.CommentService;
+import ru.eventlink.comment.service.CommentPrivateService;
 import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.like.service.LikeCommentService;
 
@@ -16,14 +16,14 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class LikeCommentController {
-    private final CommentService commentService;
+    private final CommentPrivateService commentPrivateService;
     private final LikeCommentService likeCommentService;
 
     @PostMapping
     public void addLike(@PathVariable @Positive Long userId,
                         @PathVariable String commentId) {
         log.info("Add like comment = {} by userId = {}", commentId, userId);
-        commentService.addLike(commentId, userId);
+        commentPrivateService.addLike(commentId, userId);
     }
 
     @GetMapping
@@ -38,6 +38,6 @@ public class LikeCommentController {
     public void deleteLike(@PathVariable @Positive Long userId,
                            @PathVariable String commentId) {
         log.info("Delete like comment = {} by userId = {}", commentId, userId);
-        commentService.deleteLike(commentId, userId);
+        commentPrivateService.deleteLike(commentId, userId);
     }
 }

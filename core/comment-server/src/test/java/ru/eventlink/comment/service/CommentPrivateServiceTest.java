@@ -18,16 +18,13 @@ import ru.eventlink.comment.model.Comment;
 import ru.eventlink.comment.repository.CommentRepository;
 import ru.eventlink.configuration.LikeCommentConfig;
 import ru.eventlink.dto.comment.CommentDto;
-import ru.eventlink.dto.comment.CommentUserDto;
 import ru.eventlink.dto.comment.RequestCommentDto;
 import ru.eventlink.dto.comment.UpdateCommentDto;
-import ru.eventlink.enums.CommentSort;
 import ru.eventlink.exception.NotFoundException;
 import ru.eventlink.like.model.LikeComment;
 import ru.eventlink.like.repository.LikeCommentRepository;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,10 +37,10 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @Testcontainers
-public class CommentServiceTest {
+public class CommentPrivateServiceTest {
 
     @Autowired
-    private CommentService commentService;
+    private CommentPrivateService commentPrivateService;
 
     @Autowired
     private CommentRepository commentRepository;
@@ -117,7 +114,7 @@ public class CommentServiceTest {
         when(eventClient.findExistEventByEventId(anyLong()))
                 .thenReturn(true);
 
-        CommentDto commentDto = commentService.addComment(USER_ID, EVENT_ID, requestCommentDto);
+        CommentDto commentDto = commentPrivateService.addComment(USER_ID, EVENT_ID, requestCommentDto);
         assertThat(commentDto.getId(), notNullValue());
         assertThat(commentDto.getCreationDate(), notNullValue());
         assertThat(commentDto.getUpdateDate(), notNullValue());
@@ -131,7 +128,7 @@ public class CommentServiceTest {
                 .thenReturn(true);
 
         assertThatExceptionOfType(NotFoundException.class)
-                .isThrownBy(() -> commentService.addComment(USER_ID, EVENT_ID, requestCommentDto))
+                .isThrownBy(() -> commentPrivateService.addComment(USER_ID, EVENT_ID, requestCommentDto))
                 .withMessage("User with id =" + USER_ID + " was not found");
     }
 
@@ -143,49 +140,8 @@ public class CommentServiceTest {
                 .thenReturn(false);
 
         assertThatExceptionOfType(NotFoundException.class)
-                .isThrownBy(() -> commentService.addComment(USER_ID, EVENT_ID, requestCommentDto))
+                .isThrownBy(() -> commentPrivateService.addComment(USER_ID, EVENT_ID, requestCommentDto))
                 .withMessage("Event with id =" + EVENT_ID + " was not found");
-    }
-
-    @Test
-    public void testFindAllCommentsByEventIdAndSortDate() {
-        commentRepository.saveAll(comments);
-
-        when(eventClient.findExistEventByEventId(anyLong()))
-                .thenReturn(true);
-
-        List<CommentDto> commentsDto = commentService.findAllCommentsByEventId(EVENT_ID, CommentSort.DATE, 0, 10);
-        assertThat(commentsDto, notNullValue());
-        assertThat(commentsDto.size(), equalTo(comments.size()));
-        assertThat(commentsDto.getFirst().getCreationDate().truncatedTo(ChronoUnit.MILLIS),
-                equalTo(comments.getFirst().getCreationDate().truncatedTo(ChronoUnit.MILLIS)));
-    }
-
-    @Test
-    public void testFindAllCommentsByEventIdAndSortLike() {
-        commentRepository.saveAll(comments);
-
-        when(eventClient.findExistEventByEventId(anyLong()))
-                .thenReturn(true);
-
-        List<CommentDto> commentsDto = commentService.findAllCommentsByEventId(EVENT_ID, CommentSort.LIKES, 0, 10);
-        assertThat(commentsDto, notNullValue());
-        assertThat(commentsDto.size(), equalTo(comments.size()));
-        assertThat(commentsDto.getFirst().getLikes(), equalTo(comments.getLast().getLikes()));
-        assertThat(commentsDto.getLast().getLikes(), equalTo(comments.getFirst().getLikes()));
-    }
-
-    @Test
-    public void testFindAllCommentsByUserIdAndSortDate() {
-        commentRepository.saveAll(comments);
-
-        when(userClient.getUserExists(anyLong()))
-                .thenReturn(true);
-
-        List<CommentUserDto> commentsUserDto = commentService.findAllCommentsByUserId(USER_ID, CommentSort.DATE, 0, 10);
-        assertThat(commentsUserDto, notNullValue());
-        assertThat(commentsUserDto.size(), equalTo(1));
-        assertThat(commentsUserDto.getFirst().getAuthorId(), equalTo(USER_ID));
     }
 
     @Test
@@ -195,7 +151,7 @@ public class CommentServiceTest {
         when(userClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
-        CommentDto commentDto = commentService.updateComment(USER_ID, comment.getId().toHexString(), updateCommentDto);
+        CommentDto commentDto = commentPrivateService.updateComment(USER_ID, comment.getId().toHexString(), updateCommentDto);
         assertThat(commentDto, notNullValue());
         assertThat(commentDto.getId(), equalTo(comment.getId().toHexString()));
         assertThat(commentDto.getText(), equalTo(updateCommentDto.getText()));
@@ -210,7 +166,7 @@ public class CommentServiceTest {
                 .thenReturn(true);
 
         assertThatExceptionOfType(NotFoundException.class)
-                .isThrownBy(() -> commentService.updateComment(USER_ID, notValidCommentId, updateCommentDto))
+                .isThrownBy(() -> commentPrivateService.updateComment(USER_ID, notValidCommentId, updateCommentDto))
                 .withMessage("Comment " + notValidCommentId + " not found");
     }
 
@@ -221,7 +177,7 @@ public class CommentServiceTest {
         when(userClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
-        CommentDto commentDto = commentService.addSubComment(USER_ID, comment.getId().toHexString(), requestCommentDto);
+        CommentDto commentDto = commentPrivateService.addSubComment(USER_ID, comment.getId().toHexString(), requestCommentDto);
         Comment commentAfterResponse = commentRepository.findById(comment.getId()).orElse(null);
         Comment subComment = commentRepository.findById(new ObjectId(commentDto.getId())).orElse(null);
         assertThat(commentDto, notNullValue());
@@ -240,7 +196,7 @@ public class CommentServiceTest {
                 .thenReturn(true);
 
         assertThatExceptionOfType(NotFoundException.class)
-                .isThrownBy(() -> commentService.addSubComment(USER_ID, notValidCommentId, requestCommentDto))
+                .isThrownBy(() -> commentPrivateService.addSubComment(USER_ID, notValidCommentId, requestCommentDto))
                 .withMessage("Comment " + notValidCommentId + " not found");
     }
 
@@ -251,7 +207,7 @@ public class CommentServiceTest {
         when(userClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
-        CommentDto commentDto = commentService.deleteComment(USER_ID, comment.getId().toHexString());
+        CommentDto commentDto = commentPrivateService.deleteComment(USER_ID, comment.getId().toHexString());
         assertThat(commentDto, notNullValue());
         assertThat(commentDto.getId(), equalTo(comment.getId().toHexString()));
         assertThat(commentDto.getDeleted(), equalTo(true));
@@ -266,7 +222,7 @@ public class CommentServiceTest {
         when(userClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
-        commentService.addLike(comment.getId().toHexString(), USER_ID);
+        commentPrivateService.addLike(comment.getId().toHexString(), USER_ID);
         Comment commentAfterLike = commentRepository.findById(comment.getId()).orElse(null);
         LikeComment likeComment = likeCommentRepository.findAll().getFirst();
         assertThat(commentAfterLike, notNullValue());
@@ -289,7 +245,7 @@ public class CommentServiceTest {
                 .thenReturn(true);
 
         for (int i = 0; i < likeCommentConfig.getMaxLikesModalView(); i++) {
-            commentService.addLike(comment.getId().toHexString(), USER_ID + i);
+            commentPrivateService.addLike(comment.getId().toHexString(), USER_ID + i);
         }
 
         Comment commentAfterLike = commentRepository.findById(comment.getId()).orElse(null);
@@ -315,7 +271,7 @@ public class CommentServiceTest {
                 .thenReturn(true);
 
         for (int i = 0; i < countLikes; i++) {
-            commentService.addLike(comment.getId().toHexString(), USER_ID + i);
+            commentPrivateService.addLike(comment.getId().toHexString(), USER_ID + i);
         }
 
         Comment commentAfterLike = commentRepository.findById(comment.getId()).orElse(null);
@@ -341,12 +297,12 @@ public class CommentServiceTest {
                 .thenReturn(true);
 
         for (int i = 0; i < countLikes; i++) {
-            commentService.addLike(comment.getId().toHexString(), USER_ID + i);
+            commentPrivateService.addLike(comment.getId().toHexString(), USER_ID + i);
         }
 
         List<LikeComment> likesCommentBeforeDelete = likeCommentRepository.findAll();
         Comment commentBeforeDeleteLike = commentRepository.findById(comment.getId()).orElse(null);
-        commentService.deleteLike(comment.getId().toHexString(), (long) countLikes);
+        commentPrivateService.deleteLike(comment.getId().toHexString(), (long) countLikes);
         Comment commentAfterDeleteLike = commentRepository.findById(comment.getId()).orElse(null);
         List<LikeComment> likesCommentAfterDelete = likeCommentRepository.findAll();
         boolean contains = likesCommentAfterDelete.stream()
@@ -374,12 +330,12 @@ public class CommentServiceTest {
                 .thenReturn(true);
 
         for (int i = 0; i < countLikes; i++) {
-            commentService.addLike(comment.getId().toHexString(), USER_ID + i);
+            commentPrivateService.addLike(comment.getId().toHexString(), USER_ID + i);
         }
 
         List<LikeComment> likesCommentBeforeDelete = likeCommentRepository.findAll();
         Comment commentBeforeDeleteLike = commentRepository.findById(comment.getId()).orElse(null);
-        commentService.deleteLike(comment.getId().toHexString(), USER_ID);
+        commentPrivateService.deleteLike(comment.getId().toHexString(), USER_ID);
         Comment commentAfterDeleteLike = commentRepository.findById(comment.getId()).orElse(null);
         List<LikeComment> likesCommentAfterDelete = likeCommentRepository.findAll();
         boolean contains = likesCommentAfterDelete.stream()

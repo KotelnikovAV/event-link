@@ -24,7 +24,7 @@ import static ru.eventlink.event.model.QEvent.event;
 
 @Service
 @Slf4j
-public class EventPublicServiceImpl extends EventServiceBase implements EventPublicService {
+public class EventPublicServiceImpl extends EventService implements EventPublicService {
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
 

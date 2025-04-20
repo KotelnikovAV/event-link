@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class EventServiceBase {
+public abstract class EventService {
     protected final RecommendationsClient recommendationsClient;
 
-    public EventServiceBase(RecommendationsClient recommendationsClient) {
+    public EventService(RecommendationsClient recommendationsClient) {
         this.recommendationsClient = recommendationsClient;
     }
 

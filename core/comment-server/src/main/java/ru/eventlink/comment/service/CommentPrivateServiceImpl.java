@@ -1,10 +1,7 @@
 package ru.eventlink.comment.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.eventlink.client.event.EventClient;
@@ -14,59 +11,29 @@ import ru.eventlink.comment.model.Comment;
 import ru.eventlink.comment.repository.CommentRepository;
 import ru.eventlink.configuration.LikeCommentConfig;
 import ru.eventlink.dto.comment.CommentDto;
-import ru.eventlink.dto.comment.CommentUserDto;
 import ru.eventlink.dto.comment.RequestCommentDto;
 import ru.eventlink.dto.comment.UpdateCommentDto;
-import ru.eventlink.dto.user.UserDto;
-import ru.eventlink.enums.CommentSort;
 import ru.eventlink.exception.NotFoundException;
 import ru.eventlink.like.service.LikeCommentService;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
-public class CommentServiceImpl implements CommentService {
-    private final CommentRepository commentRepository;
-    private final CommentMapper commentMapper;
+public class CommentPrivateServiceImpl extends CommentService implements CommentPrivateService {
     private final LikeCommentService likeCommentService;
-    private final UserClient userClient;
-    private final EventClient eventClient;
     private final LikeCommentConfig likeCommentConfig;
 
-
-    @Override
-    public List<CommentDto> findAllCommentsByEventId(Long eventId, CommentSort commentSort, int page, int size) {
-        log.info("Finding all comments by event id {}", eventId);
-
-        checkUserAndEventExists(null, eventId);
-
-        List<Comment> comments = commentRepository
-                .findByEventId(eventId, getPageRequest(page, size, commentSort))
-                .getContent();
-
-        List<CommentDto> commentsDto = getCommentsDto(comments);
-
-        log.info("Found {} comments by event", commentsDto.size());
-        return commentsDto;
-    }
-
-    @Override
-    public List<CommentUserDto> findAllCommentsByUserId(Long userId, CommentSort commentSort, int page, int size) {
-        log.info("Finding all comments by user id {}", userId);
-
-        checkUserAndEventExists(userId, null);
-
-        List<Comment> comments = commentRepository
-                .findByAuthorId(userId, getPageRequest(page, size, commentSort))
-                .getContent();
-
-        log.info("Found {} comments by user", comments.size());
-
-        return commentMapper.commentsToCommentsUserDto(comments);
+    public CommentPrivateServiceImpl(CommentRepository commentRepository,
+                                     CommentMapper commentMapper,
+                                     UserClient userClient,
+                                     EventClient eventClient,
+                                     LikeCommentService likeCommentService,
+                                     LikeCommentConfig likeCommentConfig) {
+        super(commentRepository, commentMapper, userClient, eventClient);
+        this.likeCommentService = likeCommentService;
+        this.likeCommentConfig = likeCommentConfig;
     }
 
     @Override
@@ -125,6 +92,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentDto deleteComment(Long userId, String commentId) {
         log.info("Deleting comment");
 
@@ -191,43 +159,4 @@ public class CommentServiceImpl implements CommentService {
         log.info("Deleted like");
     }
 
-    private void checkUserAndEventExists(Long userId, Long eventId) {
-        if (userId != null && !userClient.getUserExists(userId)) {
-            throw new NotFoundException("User with id =" + userId + " was not found");
-        }
-
-        if (eventId != null && !eventClient.findExistEventByEventId(eventId)) {
-            throw new NotFoundException("Event with id =" + eventId + " was not found");
-        }
-    }
-
-    private PageRequest getPageRequest(int page, int size, CommentSort commentSort) {
-        return switch (commentSort) {
-            case LIKES -> PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "likes"));
-            case DATE -> PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "creationDate"));
-        };
-    }
-
-    private List<CommentDto> getCommentsDto(List<Comment> comments) {
-        List<Long> usersId = comments.stream()
-                .map(Comment::getLikedUsersId)
-                .flatMap(List::stream)
-                .distinct()
-                .toList();
-
-        List<UserDto> usersDto = userClient.getAllUsers(usersId, 0, usersId.size());
-
-        List<CommentDto> commentsDto = new ArrayList<>();
-
-        for (Comment comment : comments) {
-            CommentDto commentDto = commentMapper.commentToCommentDto(comment);
-            List<UserDto> usersLiked = usersDto.stream()
-                    .filter(userDto -> comment.getLikedUsersId().contains(userDto.getId()))
-                    .toList();
-            commentDto.setUsersLiked(usersLiked);
-            commentsDto.add(commentDto);
-        }
-
-        return commentsDto;
-    }
 }

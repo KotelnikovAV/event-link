@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.eventlink.comment.service.CommentService;
+import ru.eventlink.comment.service.CommentAdminService;
 import ru.eventlink.dto.comment.CommentUserDto;
 import ru.eventlink.enums.CommentSort;
 
@@ -19,7 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class CommentAdminController {
-    private final CommentService commentService;
+    private final CommentAdminService commentAdminService;
 
     @GetMapping
     public List<CommentUserDto> findAllCommentsByUserId(@RequestParam @Positive Long userId,
@@ -27,6 +27,6 @@ public class CommentAdminController {
                                                         @RequestParam(defaultValue = "0") @PositiveOrZero int page,
                                                         @RequestParam(defaultValue = "50") @Positive int size) {
         log.info("Get all comments event by userId = {}, sort = {}", userId, sort);
-        return commentService.findAllCommentsByUserId(userId, sort, page, size);
+        return commentAdminService.findAllCommentsByUserId(userId, sort, page, size);
     }
 }

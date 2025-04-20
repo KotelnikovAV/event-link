@@ -38,7 +38,7 @@ import static ru.eventlink.utility.Constants.MAXIMUM_SIZE_OF_THE_RECOMMENDATION_
 
 @Service
 @Slf4j
-public class EventPrivateServiceImpl extends EventServiceBase implements EventPrivateService {
+public class EventPrivateServiceImpl extends EventService implements EventPrivateService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final UserClient userClient;
