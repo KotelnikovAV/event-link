@@ -163,7 +163,7 @@
         ]
       }
     },
-    "/api/v1/users/{userId}/events/{eventId}/comments": {
+    "/users/{userId}/events/{eventId}/comments": {
       "post": {
         "summary": "Добавление нового комментария",
         "tags": [
@@ -249,7 +249,7 @@
         }
       }
     },
-    "/api/v1/users/{userId}/events/comments/{commentId}": {
+    "/users/{userId}/events/comments/{commentId}": {
       "patch": {
         "summary": "Обновление комментария",
         "tags": [
@@ -477,7 +477,7 @@
         }
       }
     },
-    "/api/v1/events/{eventId}/comments": {
+    "/events/{eventId}/comments": {
       "get": {
         "summary": "Поиск комментариев к событию",
         "tags": [
@@ -486,14 +486,13 @@
         "operationId": "findAllCommentsByEventId",
         "parameters": [
           {
-            "description": "id события, комментарии которого нужно выгрузить",
-            "in": "query",
+            "description": "id события, которому оставляют комментарий",
             "name": "eventId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64",
-              "example": 5
+              "format": "int64"
             }
           },
           {
@@ -566,13 +565,13 @@
         }
       }
     },
-    "/api/v1/users/{userId}/events/comments/{commentId}/like": {
+    "/sers/{userId}/events/comments/{commentId}/like": {
       "post": {
         "summary": "Добавление лайка комментарию",
         "tags": [
           "Private: Лайки комментариев"
         ],
-        "operationId": "addLike",
+        "operationId": "addLikeComment",
         "parameters": [
           {
             "description": "id пользователя, который ставит лайк",
@@ -712,7 +711,7 @@
         "tags": [
           "Private: Лайки комментариев"
         ],
-        "operationId": "deleteLike",
+        "operationId": "deleteLikeComment",
         "parameters": [
           {
             "description": "id пользователя, который удаляет лайк",
@@ -2002,28 +2001,33 @@
     "/event/{eventId}/like/{userId}": {
       "post": {
         "description": "Обратите внимание: пользователь, который ставит лайк, не должен быть публикатором этого события (Ожидается код 409), он должен быть участником этого события (Ожидается код 409) и у него не должен быть уже проставленный лайк (Ожидается код 404)",
-        "operationId": "addLike",
+        "operationId": "addLikeEvent",
         "parameters": [
           {
-            "name": "id события, которому ставится лайк",
+            "description": "id события, которому ставится лайк",
+            "name": "eventId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "example": 10
             }
           },
           {
-            "name": "id пользователя, который ставит лайк",
+            "description": "id пользователя, который ставит лайк",
+            "name": "userId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "example": 15
             }
           },
           {
-            "name": "Реакция пользователя: LIKE или DISLIKE",
+            "description": "Реакция пользователя: LIKE или DISLIKE",
+            "name": "reaction",
             "in": "query",
             "required": true,
             "schema": {
@@ -2032,7 +2036,8 @@
                 "LIKE",
                 "DISLIKE"
               ]
-            }
+            },
+            "example": "reaction=LIKE"
           }
         ],
         "responses": {
@@ -2089,25 +2094,30 @@
         "operationId": "updateLike",
         "parameters": [
           {
-            "name": "id события, у которого обновляется оценка",
+            "description": "id события, у которого обновляется оценка",
+            "name": "eventId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "example": 15
             }
           },
           {
-            "name": "id пользователя, который обновляет оценку",
+            "description": "id пользователя, который обновляет оценку",
+            "name": "userId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "example": 23
             }
           },
           {
-            "name": "Новая реакция пользователя: LIKE или DISLIKE",
+            "description": "Новая реакция пользователя: LIKE или DISLIKE",
+            "name": "reaction",
             "in": "query",
             "required": true,
             "schema": {
@@ -2116,7 +2126,8 @@
                 "LIKE",
                 "DISLIKE"
               ]
-            }
+            },
+            "example": "reaction=DISLIKE"
           }
         ],
         "responses": {
@@ -2170,24 +2181,28 @@
       },
       "delete": {
         "description": "Обратите внимание: у пользователя уже должна быть проставлена оценка (Ожидается код 404)",
-        "operationId": "deleteLike",
+        "operationId": "deleteLikeEvent",
         "parameters": [
           {
-            "name": "id события, оценку которого нужно удалить",
+            "description": "id события, оценку которого нужно удалить",
+            "name": "eventId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "example": 3
             }
           },
           {
-            "name": "id пользователя, оценку которого нужно удалить",
+            "description": "id пользователя, оценку которого нужно удалить",
+            "name": "userId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "example": 23
             }
           }
         ],
@@ -2230,7 +2245,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "example": 32
             }
           },
           {
@@ -2716,12 +2732,23 @@
         "operationId": "findRecommendations",
         "parameters": [
           {
-            "name": "id текущего пользователя",
+            "name": "userId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "example": 10
+            }
+          },
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 20
             }
           }
         ],
