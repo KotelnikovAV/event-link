@@ -61,4 +61,4 @@ EventLink создан для того, чтобы сделать поиск и 
 - написать автотесты.
 
 ## 4. Техническая документация проекта. 📃
-Спецификация API в формате OpenAPI 3.0: [el-main-service-spec.json](https://github.com/user-attachments/files/19825130/el-main-service-spec.json)
+Спецификация API в формате OpenAPI 3.0: [Спецификация API (event-link)]([https://github.com/user-attachments/files/19825130/el-main-service-spec.json](https://editor.swagger.io/?url=https://raw.githubusercontent.com/KotelnikovAV/event-link/master/el-main-service-spec.json))
