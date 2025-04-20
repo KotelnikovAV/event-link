@@ -5,7 +5,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.eventlink.comment.service.CommentService;
+import ru.eventlink.comment.service.CommentPublicService;
 import ru.eventlink.dto.comment.CommentDto;
 import ru.eventlink.enums.CommentSort;
 
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class CommentPublicController {
-    private final CommentService commentService;
+    private final CommentPublicService commentService;
 
     @GetMapping
     public List<CommentDto> findAllCommentsByEventId(@PathVariable @Positive Long eventId,

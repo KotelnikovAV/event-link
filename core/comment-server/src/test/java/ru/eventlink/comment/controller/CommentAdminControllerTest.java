@@ -7,7 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.eventlink.comment.service.CommentService;
+import ru.eventlink.comment.service.CommentAdminService;
 import ru.eventlink.dto.comment.CommentUserDto;
 
 import java.nio.charset.StandardCharsets;
@@ -30,7 +30,7 @@ public class CommentAdminControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private CommentService commentService;
+    private CommentAdminService commentAdminService;
 
     private static List<CommentUserDto> comments;
 
@@ -53,7 +53,7 @@ public class CommentAdminControllerTest {
 
     @Test
     void testValidFindCommentsByAuthorId() throws Exception {
-        when(commentService.findAllCommentsByUserId(anyLong(), any(), anyInt(), anyInt()))
+        when(commentAdminService.findAllCommentsByUserId(anyLong(), any(), anyInt(), anyInt()))
                 .thenReturn(comments);
 
         mvc.perform(get("/api/v1/admin/events/comments")
@@ -71,7 +71,7 @@ public class CommentAdminControllerTest {
 
     @Test
     void testNotValidFindCommentsByAuthorId() throws Exception {
-        when(commentService.findAllCommentsByUserId(anyLong(), any(), anyInt(), anyInt()))
+        when(commentAdminService.findAllCommentsByUserId(anyLong(), any(), anyInt(), anyInt()))
                 .thenReturn(comments);
 
         mvc.perform(get("/api/v1/admin/events/comments")

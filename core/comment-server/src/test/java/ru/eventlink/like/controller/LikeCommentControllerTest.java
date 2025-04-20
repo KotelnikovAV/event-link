@@ -7,7 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.eventlink.comment.service.CommentService;
+import ru.eventlink.comment.service.CommentPrivateService;
 import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.like.service.LikeCommentService;
 
@@ -29,7 +29,7 @@ public class LikeCommentControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private CommentService commentService;
+    private CommentPrivateService commentPrivateService;
 
     @MockBean
     private LikeCommentService likeCommentService;
@@ -59,18 +59,18 @@ public class LikeCommentControllerTest {
 
     @Test
     public void addValidLike() throws Exception {
-        doNothing().when(commentService).addLike(anyString(), anyLong());
+        doNothing().when(commentPrivateService).addLike(anyString(), anyLong());
 
         mvc.perform(post("/api/v1/users/{userId}/events/comments/{commentId}/like", userId, commentId)
                         .characterEncoding(StandardCharsets.UTF_8))
                 .andExpect(status().isOk());
 
-        verify(commentService).addLike(anyString(), anyLong());
+        verify(commentPrivateService).addLike(anyString(), anyLong());
     }
 
     @Test
     public void addNotValidLike() throws Exception {
-        doNothing().when(commentService).addLike(anyString(), anyLong());
+        doNothing().when(commentPrivateService).addLike(anyString(), anyLong());
 
         mvc.perform(post("/api/v1/users/{userId}/events/comments/{commentId}/like", (userId * -1), commentId)
                         .characterEncoding(StandardCharsets.UTF_8))
@@ -78,7 +78,7 @@ public class LikeCommentControllerTest {
                 .andExpect(jsonPath("$.status").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.message").value(containsString("Validation failure")));
 
-        verify(commentService, never()).addLike(anyString(), anyLong());
+        verify(commentPrivateService, never()).addLike(anyString(), anyLong());
     }
 
     @Test
@@ -111,18 +111,18 @@ public class LikeCommentControllerTest {
 
     @Test
     public void deleteValidLike() throws Exception {
-        doNothing().when(commentService).deleteLike(anyString(), anyLong());
+        doNothing().when(commentPrivateService).deleteLike(anyString(), anyLong());
 
         mvc.perform(delete("/api/v1/users/{userId}/events/comments/{commentId}/like", userId, commentId)
                         .characterEncoding(StandardCharsets.UTF_8))
                 .andExpect(status().isOk());
 
-        verify(commentService).deleteLike(anyString(), anyLong());
+        verify(commentPrivateService).deleteLike(anyString(), anyLong());
     }
 
     @Test
     public void deleteNotValidLike() throws Exception {
-        doNothing().when(commentService).deleteLike(anyString(), anyLong());
+        doNothing().when(commentPrivateService).deleteLike(anyString(), anyLong());
 
         mvc.perform(post("/api/v1/users/{userId}/events/comments/{commentId}/like", (userId * -1), commentId)
                         .characterEncoding(StandardCharsets.UTF_8))
@@ -130,6 +130,6 @@ public class LikeCommentControllerTest {
                 .andExpect(jsonPath("$.status").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.message").value(containsString("Validation failure")));
 
-        verify(commentService, never()).deleteLike(anyString(), anyLong());
+        verify(commentPrivateService, never()).deleteLike(anyString(), anyLong());
     }
 }

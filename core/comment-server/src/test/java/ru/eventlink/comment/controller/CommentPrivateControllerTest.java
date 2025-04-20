@@ -8,7 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.eventlink.comment.service.CommentService;
+import ru.eventlink.comment.service.CommentPrivateService;
 import ru.eventlink.dto.comment.CommentDto;
 import ru.eventlink.dto.comment.RequestCommentDto;
 import ru.eventlink.dto.comment.UpdateCommentDto;
@@ -34,7 +34,7 @@ public class CommentPrivateControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private CommentService commentService;
+    private CommentPrivateService commentPrivateService;
 
     private static RequestCommentDto validRequestCommentDto;
 
@@ -88,7 +88,7 @@ public class CommentPrivateControllerTest {
 
     @Test
     void testAddComments() throws Exception {
-        when(commentService.addComment(anyLong(), anyLong(), any()))
+        when(commentPrivateService.addComment(anyLong(), anyLong(), any()))
                 .thenReturn(commentDto);
 
         mvc.perform(post("/api/v1/users/{userId}/events/{eventId}/comments", userId, eventId)
@@ -109,7 +109,7 @@ public class CommentPrivateControllerTest {
 
     @Test
     void testAddNotValidComments() throws Exception {
-        when(commentService.addComment(anyLong(), anyLong(), any()))
+        when(commentPrivateService.addComment(anyLong(), anyLong(), any()))
                 .thenReturn(commentDto);
 
         mvc.perform(post("/api/v1/users/{userId}/events/{eventId}/comments", userId, eventId)
@@ -124,7 +124,7 @@ public class CommentPrivateControllerTest {
 
     @Test
     void testUpdateComments() throws Exception {
-        when(commentService.updateComment(anyLong(), anyString(), any()))
+        when(commentPrivateService.updateComment(anyLong(), anyString(), any()))
                 .thenReturn(commentDto);
 
         mvc.perform(patch("/api/v1/users/{userId}/events/comments/{commentId}", userId, commentId)
@@ -145,7 +145,7 @@ public class CommentPrivateControllerTest {
 
     @Test
     void testUpdateNotValidComments() throws Exception {
-        when(commentService.updateComment(anyLong(), anyString(), any()))
+        when(commentPrivateService.updateComment(anyLong(), anyString(), any()))
                 .thenReturn(commentDto);
 
         mvc.perform(patch("/api/v1/users/{userId}/events/comments/{commentId}", userId, commentId)
@@ -160,7 +160,7 @@ public class CommentPrivateControllerTest {
 
     @Test
     void testAddSubComments() throws Exception {
-        when(commentService.addSubComment(anyLong(), anyString(), any()))
+        when(commentPrivateService.addSubComment(anyLong(), anyString(), any()))
                 .thenReturn(commentDto);
 
         mvc.perform(post("/api/v1/users/{userId}/events/comments/{commentId}", userId, commentId)
@@ -181,7 +181,7 @@ public class CommentPrivateControllerTest {
 
     @Test
     void testAddNotValidSubComments() throws Exception {
-        when(commentService.addSubComment(anyLong(), anyString(), any()))
+        when(commentPrivateService.addSubComment(anyLong(), anyString(), any()))
                 .thenReturn(commentDto);
 
         mvc.perform(patch("/api/v1/users/{userId}/events/comments/{commentId}", userId, commentId)
@@ -196,7 +196,7 @@ public class CommentPrivateControllerTest {
 
     @Test
     void testDeleteComments() throws Exception {
-        when(commentService.deleteComment(anyLong(), anyString()))
+        when(commentPrivateService.deleteComment(anyLong(), anyString()))
                 .thenReturn(commentDto);
 
         mvc.perform(delete("/api/v1/users/{userId}/events/comments/{commentId}", userId, commentId)
@@ -215,7 +215,7 @@ public class CommentPrivateControllerTest {
 
     @Test
     void testDeleteNotValidSubComments() throws Exception {
-        when(commentService.deleteComment(anyLong(), anyString()))
+        when(commentPrivateService.deleteComment(anyLong(), anyString()))
                 .thenReturn(commentDto);
 
         mvc.perform(patch("/api/v1/users/{userId}/events/comments/{commentId}", (userId * -1), commentId)

@@ -1,27 +1,44 @@
 package ru.eventlink.comment.service;
 
-import ru.eventlink.dto.comment.CommentDto;
-import ru.eventlink.dto.comment.CommentUserDto;
-import ru.eventlink.dto.comment.RequestCommentDto;
-import ru.eventlink.dto.comment.UpdateCommentDto;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import ru.eventlink.client.event.EventClient;
+import ru.eventlink.client.user.UserClient;
+import ru.eventlink.comment.mapper.CommentMapper;
+import ru.eventlink.comment.repository.CommentRepository;
 import ru.eventlink.enums.CommentSort;
+import ru.eventlink.exception.NotFoundException;
 
-import java.util.List;
+public abstract class CommentService {
+    protected final CommentRepository commentRepository;
+    protected final CommentMapper commentMapper;
+    protected final UserClient userClient;
+    protected final EventClient eventClient;
 
-public interface CommentService {
-    List<CommentDto> findAllCommentsByEventId(Long eventId, CommentSort commentSort, int page, int size);
+    public CommentService(CommentRepository commentRepository,
+                          CommentMapper commentMapper,
+                          UserClient userClient,
+                          EventClient eventClient) {
+        this.commentRepository = commentRepository;
+        this.commentMapper = commentMapper;
+        this.userClient = userClient;
+        this.eventClient = eventClient;
+    }
 
-    List<CommentUserDto> findAllCommentsByUserId(Long userId, CommentSort commentSort, int page, int size);
+    protected void checkUserAndEventExists(Long userId, Long eventId) {
+        if (userId != null && !userClient.getUserExists(userId)) {
+            throw new NotFoundException("User with id =" + userId + " was not found");
+        }
 
-    CommentDto addComment(Long userId, Long eventId, RequestCommentDto commentDto);
+        if (eventId != null && !eventClient.findExistEventByEventId(eventId)) {
+            throw new NotFoundException("Event with id =" + eventId + " was not found");
+        }
+    }
 
-    CommentDto updateComment(Long userId, String commentId, UpdateCommentDto updateCommentDto);
-
-    CommentDto addSubComment(Long userId, String parentCommentId, RequestCommentDto commentDto);
-
-    CommentDto deleteComment(Long userId, String commentId);
-
-    void addLike(String commentId, Long authorId);
-
-    void deleteLike(String commentId, Long authorId);
+    protected PageRequest getPageRequest(int page, int size, CommentSort commentSort) {
+        return switch (commentSort) {
+            case LIKES -> PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "likes"));
+            case DATE -> PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "creationDate"));
+        };
+    }
 }

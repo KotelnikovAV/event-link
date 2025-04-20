@@ -7,7 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.eventlink.comment.service.CommentService;
+import ru.eventlink.comment.service.CommentPublicService;
 import ru.eventlink.dto.comment.CommentDto;
 
 import java.nio.charset.StandardCharsets;
@@ -30,7 +30,7 @@ public class CommentPublicControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private CommentService commentService;
+    private CommentPublicService commentService;
 
     private static List<CommentDto> comments;
 
