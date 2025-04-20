@@ -140,6 +140,10 @@ public class FriendsServiceImpl implements FriendsService {
     public List<FollowUserDto> findAllFollowers(long senderId, int page, int size) {
         log.info("findAllFollowers: senderId: {}, page: {}, size: {}", senderId, page, size);
 
+        if (!userRepository.existsById(senderId)) {
+            throw new NotFoundException("User with id = " + senderId + " not found");
+        }
+
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "requestDate"));
 
         Page<Friends> followers = friendsRepository.findAllFollowersByUserId(pageRequest, senderId);
@@ -154,6 +158,10 @@ public class FriendsServiceImpl implements FriendsService {
     public List<FriendUserDto> findAllFriends(long senderId, int page, int size) {
         log.info("findAllFriends: senderId: {}, page: {}, size: {}", senderId, page, size);
 
+        if (!userRepository.existsById(senderId)) {
+            throw new NotFoundException("User with id = " + senderId + " not found");
+        }
+
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "confirmationDate"));
 
         Page<Friends> friends = friendsRepository.findAllFriendsByUserId(pageRequest, senderId);
@@ -165,12 +173,16 @@ public class FriendsServiceImpl implements FriendsService {
     }
 
     @Override
-    public List<RecommendedUserDto> findRecommendationFriends(long userId, int page, int size) {
-        log.info("findRecommendationFriends: userId: {}, page: {}, size: {}", userId, page, size);
+    public List<RecommendedUserDto> findRecommendationFriends(long senderId, int page, int size) {
+        log.info("findRecommendationFriends: userId: {}, page: {}, size: {}", senderId, page, size);
 
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "common_friends_count"));
+        if (!userRepository.existsById(senderId)) {
+            throw new NotFoundException("User with id = " + senderId + " not found");
+        }
 
-        Page<RecommendedUserDto> recommendations = friendsRepository.findFriendRecommendations(pageRequest, userId);
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        Page<RecommendedUserDto> recommendations = friendsRepository.findFriendRecommendations(pageRequest, senderId);
 
         log.info("List of recommendations found");
         return recommendations.getContent();

@@ -67,6 +67,10 @@
     {
       "description": "API для работы с лайками комментариев",
       "name": "Private: Лайки комментариев"
+    },
+    {
+      "description": "API для работы с друзьями",
+      "name": "Private: Управление друзьями"
     }
   ],
   "paths": {
@@ -477,7 +481,7 @@
       "get": {
         "summary": "Поиск комментариев к событию",
         "tags": [
-          "Private: Комментарии событий"
+          "Public: Комментарии событий"
         ],
         "operationId": "findAllCommentsByEventId",
         "parameters": [
@@ -2917,6 +2921,435 @@
         ]
       }
     },
+    "/users/{senderId}/friends/{receiverId}": {
+      "post": {
+        "description": "Обратите внимание:\n- нельзя добавлять в друзья самого себя (Ожидается код ошибки 409)\n- нельзя отправить запрос на дружбу, если он уже был отправлен ранее (Ожидается код ошибки 409)",
+        "operationId": "addFriend",
+        "tags": [
+          "Private: Управление друзьями"
+        ],
+        "parameters": [
+          {
+            "description": "id пользователя, который отправляет запрос на дружбу",
+            "name": "senderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 10
+            }
+          },
+          {
+            "description": "id пользователя, которому отправляется запрос на дружбу",
+            "name": "receiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 15
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Запрос на дружбу отправлен"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "The required user was not found.",
+                  "message": "User with id = 10 not found",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Один или оба пользователя не найдены"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "CONFLICT",
+                  "reason": "Integrity constraint has been violated.",
+                  "message": "A friend request has already been sent to this user",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Нарушение целостности данных"
+          }
+        }
+      },
+      "delete": {
+        "description": "Обратите внимание:\n- нельзя удалить из друзей, если ранее заявки не было (Ожидается код ошибки 404)\n- нельзя удалить из друзей самого себя (Ожидается код ошибки 409)",
+        "operationId": "removeFriend",
+        "tags": [
+          "Private: Управление друзьями"
+        ],
+        "parameters": [
+          {
+            "description": "id пользователя, который отправляет запрос на удаление",
+            "name": "senderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 10
+            }
+          },
+          {
+            "description": "id пользователя, которого удаляют из друзей",
+            "name": "receiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь удален из друзей"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "The required friends was not found.",
+                  "message": "There is no friendship between users: 10 and 15",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Один или оба пользователя не найдены"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "CONFLICT",
+                  "reason": "Integrity constraint has been violated.",
+                  "message": "Friends can't be the same as the sender",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Нарушение целостности данных"
+          }
+        }
+      },
+      "put": {
+        "description": "Обратите внимание:\n- нельзя подтвердить дружбу, если до этого не было заявки (Ожидается код ошибки 404)\n- нельзя подтвердить дружбу, если она уже подтверждена (Ожидается код ошибки 409)\n- нельзя подтвердить дружбу пользователю, если он сам инициатор (Ожидается код ошибки 409)",
+        "operationId": "confirmRequest",
+        "tags": [
+          "Private: Управление друзьями"
+        ],
+        "parameters": [
+          {
+            "description": "id пользователя, который отправляет запрос на подтверждение",
+            "name": "senderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 15
+            }
+          },
+          {
+            "description": "id пользователя, который ранее отправлял заявку на добавление в друзья",
+            "name": "receiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Дружба подтверждена"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "The required friends was not found.",
+                  "message": "There is no friendship between users: 10 and 15",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Один или оба пользователя не найдены"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "CONFLICT",
+                  "reason": "Integrity constraint has been violated.",
+                  "message": [
+                    "The user cannot confirm the request by himself",
+                    "This user is already in the friends list",
+                    "Friends can't be the same as the sender"
+                  ],
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Нарушение целостности данных"
+          }
+        }
+      }
+    },
+    "/users/{senderId}/followers": {
+      "get": {
+        "description": "Обратите внимание: по умолчанию в контроллер передаются page = 0, size = 10",
+        "operationId": "findAllFollowers",
+        "tags": [
+          "Private: Управление друзьями"
+        ],
+        "parameters": [
+          {
+            "description": "id пользователя для которого ищется список фолловеров",
+            "name": "senderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 10
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": "0"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": "10"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FollowUserDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "The required user was not found.",
+                  "message": "User with id = 10 not found",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Один или оба пользователя не найдены"
+          }
+        }
+      }
+    },
+    "/users/{senderId}/friends": {
+      "get": {
+        "description": "Обратите внимание: по умолчанию в контроллер передаются page = 0, size = 10",
+        "operationId": "findAllFriends",
+        "tags": [
+          "Private: Управление друзьями"
+        ],
+        "parameters": [
+          {
+            "description": "id пользователя для которого ищется список друзей",
+            "name": "senderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 10
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": "0"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": "10"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FriendUserDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "The required user was not found.",
+                  "message": "User with id = 10 not found",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Один или оба пользователя не найдены"
+          }
+        }
+      }
+    },
+    "/users/{senderId}/friends/recommendations": {
+      "get": {
+        "description": "Обратите внимание: по умолчанию в контроллер передаются page = 0, size = 10",
+        "operationId": "findRecommendationFriends",
+        "tags": [
+          "Private: Управление друзьями"
+        ],
+        "parameters": [
+          {
+            "description": "id пользователя для которого ищется список рекомендуемых друзей",
+            "name": "senderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 10
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": "0"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": "10"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecommendedUserDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "NOT_FOUND",
+                  "reason": "The required user was not found.",
+                  "message": "User with id = 10 not found",
+                  "timestamp": "2022-09-07 09:10:50"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Один или оба пользователя не найдены"
+          }
+        }
+      }
+    },
     "/users/{userId}/requests/{requestId}/cancel": {
       "patch": {
         "operationId": "cancelRequest",
@@ -3799,11 +4232,6 @@
         ],
         "type": "object",
         "properties": {
-          "email": {
-            "type": "string",
-            "description": "Почтовый адрес",
-            "example": "petrov.i@practicummail.ru"
-          },
           "id": {
             "type": "integer",
             "description": "Идентификатор",
@@ -3811,10 +4239,33 @@
             "readOnly": true,
             "example": 1
           },
+          "email": {
+            "type": "string",
+            "description": "Почтовый адрес",
+            "example": "petrov.i@practicummail.ru"
+          },
           "name": {
             "type": "string",
             "description": "Имя",
             "example": "Петров Иван"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Рейтинг рекомендуемого пользователя",
+            "example": 10
+          },
+          "countFollowers": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Число подписчиков рекомендуемого пользователя",
+            "example": 100
+          },
+          "countFriends": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Число друзей рекомендуемого пользователя",
+            "example": 50
           }
         },
         "description": "Пользователь"
@@ -3981,6 +4432,100 @@
             "type": "string",
             "description": "Текст комментария",
             "example": "Это мой комментарий!"
+          }
+        }
+      },
+      "FollowUserDto": {
+        "required": [
+          "user",
+          "requestDate"
+        ],
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "requestDate": {
+            "type": "string",
+            "description": "Дата и время отправления запроса на дружбу. Дата и время указываются в формате \"yyyy-MM-dd HH:mm:ss\"",
+            "example": "2023-10-11 23:10:05"
+          }
+        }
+      },
+      "FriendUserDto": {
+        "required": [
+          "user",
+          "requestDate",
+          "confirmationDate"
+        ],
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "requestDate": {
+            "type": "string",
+            "description": "Дата и время отправления запроса на дружбу. Дата и время указываются в формате \"yyyy-MM-dd HH:mm:ss\"",
+            "example": "2023-10-11 23:10:05"
+          },
+          "confirmationDate": {
+            "type": "string",
+            "description": "Дата и время подтверждения запроса на дружбу. Дата и время указываются в формате \"yyyy-MM-dd HH:mm:ss\"",
+            "example": "2023-10-11 23:10:05"
+          }
+        }
+      },
+      "RecommendedUserDto": {
+        "required": [
+          "id",
+          "email",
+          "name",
+          "rating",
+          "countFollowers",
+          "countFriends",
+          "commonFriendsCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "id рекомендуемого пользователя",
+            "example": 10
+          },
+          "email": {
+            "type": "string",
+            "description": "email рекомендуемого пользователя",
+            "example": "email@email.ru"
+          },
+          "name": {
+            "type": "string",
+            "description": "Имя рекомендуемого пользователя",
+            "example": "Имя Имя"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Рейтинг рекомендуемого пользователя",
+            "example": 10
+          },
+          "countFollowers": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Число подписчиков рекомендуемого пользователя",
+            "example": 100
+          },
+          "countFriends": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Число друзей рекомендуемого пользователя",
+            "example": 50
+          },
+          "commonFriendsCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Число общих друзей с рекомендуемым пользователем",
+            "example": 10
           }
         }
       }
