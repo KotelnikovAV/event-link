@@ -2,8 +2,7 @@ package ru.eventlink.comment.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.eventlink.client.event.EventClient;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.RestClient;
 import ru.eventlink.comment.mapper.CommentMapper;
 import ru.eventlink.comment.model.Comment;
 import ru.eventlink.comment.repository.CommentRepository;
@@ -17,19 +16,20 @@ import java.util.List;
 @Service
 @Slf4j
 public class CommentPublicServiceImpl extends CommentService implements CommentPublicService {
+    private final RestClient restClient;
 
     public CommentPublicServiceImpl(CommentRepository commentRepository,
                                     CommentMapper commentMapper,
-                                    UserClient userClient,
-                                    EventClient eventClient) {
-        super(commentRepository, commentMapper, userClient, eventClient);
+                                    RestClient restClient) {
+        super(commentRepository, commentMapper);
+        this.restClient = restClient;
     }
 
     @Override
     public List<CommentDto> findAllCommentsByEventId(Long eventId, CommentSort commentSort, int page, int size) {
         log.info("Finding all comments by event id {}", eventId);
 
-        checkUserAndEventExists(null, eventId);
+        restClient.checkUserAndEventExists(null, eventId);
 
         List<Comment> comments = commentRepository
                 .findByEventId(eventId, getPageRequest(page, size, commentSort))
@@ -50,7 +50,7 @@ public class CommentPublicServiceImpl extends CommentService implements CommentP
                 .distinct()
                 .toList();
 
-        List<UserDto> usersDto = userClient.getAllUsers(usersId, 0, usersId.size());
+        List<UserDto> usersDto = restClient.getAllUsers(usersId, 0, usersId.size());
 
         List<CommentDto> commentsDto = new ArrayList<>();
 

@@ -1,7 +1,7 @@
 package ru.eventlink.fallback.event;
 
 import org.springframework.stereotype.Component;
-import ru.eventlink.client.event.EventClient;
+import ru.eventlink.client.event.EventAdminClient;
 import ru.eventlink.dto.event.EventFullDto;
 import ru.eventlink.dto.event.UpdateEventAdminRequest;
 import ru.eventlink.enums.State;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
-public class EventFallback implements EventClient {
+public class EventAdminFallback implements EventAdminClient {
     @Override
     public List<EventFullDto> findAllAdminEvents(List<Long> users,
                                                  State state,

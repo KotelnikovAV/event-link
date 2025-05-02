@@ -4,6 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.eventlink.dto.requests.ParticipationRequestDto;
+import ru.eventlink.enums.Status;
 import ru.eventlink.fallback.requests.RequestFallback;
 
 import java.util.List;
@@ -25,14 +26,14 @@ public interface RequestClient {
 
     @GetMapping("/api/v1/users/requests/events/{eventId}")
     List<ParticipationRequestDto> findAllRequestsByEventId(@PathVariable Long eventId,
-                                                           @RequestParam String status);
+                                                           @RequestParam Status status);
 
     @GetMapping("/api/v1/users/requests")
     List<ParticipationRequestDto> findAllRequestsByRequestsId(@RequestParam Set<Long> requestsId);
 
     @PutMapping("/api/v1/users/requests/status")
     List<ParticipationRequestDto> updateRequest(@RequestParam Set<Long> requestsId,
-                                                @RequestParam String status);
+                                                @RequestParam Status status);
 
     @GetMapping("api/v1/users/requests/existence")
     boolean findExistRequests(@RequestParam Long eventId,

@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.eventlink.client.requests.RequestClient;
 import ru.eventlink.dto.requests.ParticipationRequestDto;
+import ru.eventlink.enums.Status;
 import ru.eventlink.service.RequestService;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public class RequestPrivateController implements RequestClient {
     @GetMapping("/requests/events/{eventId}")
     @Override
     public List<ParticipationRequestDto> findAllRequestsByEventId(@PathVariable Long eventId,
-                                                                  @RequestParam(required = false) String status) {
+                                                                  @RequestParam(required = false) Status status) {
         log.info("findAllRequestsByEventIdAndStatus {}, {}", eventId, status);
         return requestService.findAllRequestsByEventIdAndStatus(eventId, status);
     }
@@ -62,7 +63,7 @@ public class RequestPrivateController implements RequestClient {
     @PutMapping("/requests/status")
     @Override
     public List<ParticipationRequestDto> updateRequest(@RequestParam Set<Long> requestsId,
-                                                       @RequestParam String status) {
+                                                       @RequestParam Status status) {
         log.info("updateRequest {}", requestsId);
         return requestService.updateRequest(requestsId, status);
     }

@@ -7,7 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.RestClient;
 import ru.eventlink.configuration.LikeCommentConfig;
 import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.exception.NotFoundException;
@@ -23,7 +23,7 @@ import java.util.List;
 @Slf4j
 public class LikeCommentServiceImpl implements LikeCommentService {
     private final LikeCommentRepository likeCommentRepository;
-    private final UserClient userClient;
+    private final RestClient restClient;
     private final LikeCommentConfig likeCommentConfig;
 
     @Override
@@ -59,7 +59,7 @@ public class LikeCommentServiceImpl implements LikeCommentService {
     public List<UserDto> findLikesByCommentId(Long userId, String commentId, int page) {
         log.info("Getting likes comment");
 
-        if (!userClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id =" + userId + " was not found. Only authorized users can view " +
                     "information about users who have liked it.");
         }
@@ -75,7 +75,7 @@ public class LikeCommentServiceImpl implements LikeCommentService {
             List<Long> usersId = likesComment.stream()
                     .map(LikeComment::getAuthorId)
                     .toList();
-            List<UserDto> users = userClient.getAllUsers(usersId, 0, usersId.size());
+            List<UserDto> users = restClient.getAllUsers(usersId, 0, usersId.size());
             log.info("The likes of the comments have been received");
             return users;
         } else {

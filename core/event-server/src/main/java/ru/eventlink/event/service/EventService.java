@@ -3,7 +3,7 @@ package ru.eventlink.event.service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.CollectionUtils;
-import ru.eventlink.client.RecommendationsClient;
+import ru.eventlink.client.GrpcClient;
 import ru.eventlink.enums.EventPublicSort;
 import ru.eventlink.event.model.Event;
 import ru.eventlink.stats.proto.RecommendedEventProto;
@@ -13,10 +13,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public abstract class EventService {
-    protected final RecommendationsClient recommendationsClient;
+    protected final GrpcClient grpcClient;
 
-    public EventService(RecommendationsClient recommendationsClient) {
-        this.recommendationsClient = recommendationsClient;
+    public EventService(GrpcClient grpcClient) {
+        this.grpcClient = grpcClient;
     }
 
     protected PageRequest getCustomPage(int page, int size, EventPublicSort sort) {
@@ -41,7 +41,7 @@ public abstract class EventService {
                 .map(Event::getId)
                 .toList();
 
-        List<RecommendedEventProto> ratingEvents = recommendationsClient.getInteractionsCount(eventsId);
+        List<RecommendedEventProto> ratingEvents = grpcClient.getInteractionsCount(eventsId);
 
         if (CollectionUtils.isEmpty(ratingEvents)) {
             return;

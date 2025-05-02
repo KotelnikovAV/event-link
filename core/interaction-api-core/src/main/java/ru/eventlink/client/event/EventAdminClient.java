@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.*;
 import ru.eventlink.dto.event.EventFullDto;
 import ru.eventlink.dto.event.UpdateEventAdminRequest;
 import ru.eventlink.enums.State;
-import ru.eventlink.fallback.event.EventFallback;
+import ru.eventlink.fallback.event.EventAdminFallback;
 import ru.eventlink.utility.Constants;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@FeignClient(name = "event-server", fallback = EventFallback.class)
-public interface EventClient {
+@FeignClient(name = "event-server", fallback = EventAdminFallback.class)
+public interface EventAdminClient {
     @GetMapping("/api/v1/admin/events")
     List<EventFullDto> findAllAdminEvents(@RequestParam(required = false) List<Long> users,
                                           @RequestParam(required = false) State state,

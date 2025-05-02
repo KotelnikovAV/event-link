@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.eventlink.client.UserActionClient;
-import ru.eventlink.client.event.EventClient;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.event.EventAdminClient;
+import ru.eventlink.client.user.UserAdminClient;
 import ru.eventlink.dto.event.EventFullDto;
 import ru.eventlink.dto.requests.ParticipationRequestDto;
 import ru.eventlink.enums.State;
@@ -28,15 +28,15 @@ import java.util.Set;
 public class RequestServiceImpl implements RequestService {
     private final RequestsRepository requestsRepository;
     private final RequestMapper requestMapper;
-    private final UserClient userClient;
-    private final EventClient eventClient;
+    private final UserAdminClient userAdminClient;
+    private final EventAdminClient eventAdminClient;
     private final UserActionClient userActionClient;
 
     @Override
     public List<ParticipationRequestDto> findAllRequestsByUserId(long userId) {
         log.info("The beginning of the process of finding all requests");
 
-        if (!userClient.getUserExists(userId)) {
+        if (!userAdminClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
@@ -56,15 +56,15 @@ public class RequestServiceImpl implements RequestService {
                             "Request with userId " + userId + " eventId " + eventId + " exists");
                 });
 
-        if (!userClient.getUserExists(userId)) {
+        if (!userAdminClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        if (eventClient.findExistEventByEventIdAndInitiatorId(eventId, userId)) {
+        if (eventAdminClient.findExistEventByEventIdAndInitiatorId(eventId, userId)) {
             throw new IntegrityViolationException("UserId " + userId + " initiates  eventId " + eventId);
         }
 
-        EventFullDto event = eventClient.findEventById(eventId);
+        EventFullDto event = eventAdminClient.findEventById(eventId);
 
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new IntegrityViolationException("Event with id = " + eventId + " is not published");
@@ -101,7 +101,7 @@ public class RequestServiceImpl implements RequestService {
     public ParticipationRequestDto cancelRequest(long userId, long requestId) {
         log.info("The beginning of the process of canceling a request");
 
-        if (!userClient.getUserExists(userId)) {
+        if (!userAdminClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
@@ -125,11 +125,11 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     @Transactional
-    public List<ParticipationRequestDto> updateRequest(Set<Long> requestsId, String status) {
+    public List<ParticipationRequestDto> updateRequest(Set<Long> requestsId, Status status) {
         log.info("The beginning of the process of updating a request");
 
         List<Request> requests = requestsRepository.findByIdIn(requestsId);
-        requests.forEach(request -> request.setStatus(Status.valueOf(status)));
+        requests.forEach(request -> request.setStatus(status));
 
         log.info("The request has been updated");
         return requestMapper.listRequestToListParticipationRequestDto(requests);
@@ -142,15 +142,15 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    public List<ParticipationRequestDto> findAllRequestsByEventIdAndStatus(Long eventId, String status) {
+    public List<ParticipationRequestDto> findAllRequestsByEventIdAndStatus(Long eventId, Status status) {
         log.info("The beginning of the process of finding all requests by eventId");
 
         List<Request> requests;
 
-        if (status == null || status.isBlank()) {
+        if (status == null) {
             requests = requestsRepository.findByEventId(eventId);
         } else {
-            requests = requestsRepository.findAllByStatusAndEventId(Status.valueOf(status), eventId);
+            requests = requestsRepository.findAllByStatusAndEventId(status, eventId);
         }
 
         log.info("The all requests has been found");

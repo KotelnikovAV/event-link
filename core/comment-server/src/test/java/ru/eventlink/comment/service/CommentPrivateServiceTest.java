@@ -12,8 +12,8 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-import ru.eventlink.client.event.EventClient;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.event.EventAdminClient;
+import ru.eventlink.client.user.UserAdminClient;
 import ru.eventlink.comment.model.Comment;
 import ru.eventlink.comment.repository.CommentRepository;
 import ru.eventlink.configuration.LikeCommentConfig;
@@ -52,10 +52,10 @@ public class CommentPrivateServiceTest {
     private LikeCommentConfig likeCommentConfig;
 
     @MockBean
-    private UserClient userClient;
+    private UserAdminClient userAdminClient;
 
     @MockBean
-    private EventClient eventClient;
+    private EventAdminClient eventAdminClient;
 
     private static final Long USER_ID = 1L;
 
@@ -109,9 +109,9 @@ public class CommentPrivateServiceTest {
 
     @Test
     public void testAddValidComment() {
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
-        when(eventClient.findExistEventByEventId(anyLong()))
+        when(eventAdminClient.findExistEventByEventId(anyLong()))
                 .thenReturn(true);
 
         CommentDto commentDto = commentPrivateService.addComment(USER_ID, EVENT_ID, requestCommentDto);
@@ -122,9 +122,9 @@ public class CommentPrivateServiceTest {
 
     @Test
     public void testAddNotValidUserComment() {
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(false);
-        when(eventClient.findExistEventByEventId(anyLong()))
+        when(eventAdminClient.findExistEventByEventId(anyLong()))
                 .thenReturn(true);
 
         assertThatExceptionOfType(NotFoundException.class)
@@ -134,9 +134,9 @@ public class CommentPrivateServiceTest {
 
     @Test
     public void testAddNotValidEventComment() {
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
-        when(eventClient.findExistEventByEventId(anyLong()))
+        when(eventAdminClient.findExistEventByEventId(anyLong()))
                 .thenReturn(false);
 
         assertThatExceptionOfType(NotFoundException.class)
@@ -148,7 +148,7 @@ public class CommentPrivateServiceTest {
     public void testUpdateValidComment() {
         Comment comment = commentRepository.save(comments.getFirst());
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
         CommentDto commentDto = commentPrivateService.updateComment(USER_ID, comment.getId().toHexString(), updateCommentDto);
@@ -162,7 +162,7 @@ public class CommentPrivateServiceTest {
         commentRepository.save(comments.getFirst());
         String notValidCommentId = "507f191e810c19729de860ea";
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
         assertThatExceptionOfType(NotFoundException.class)
@@ -174,7 +174,7 @@ public class CommentPrivateServiceTest {
     public void testValidAddSubComment() {
         Comment comment = commentRepository.save(comments.getFirst());
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
         CommentDto commentDto = commentPrivateService.addSubComment(USER_ID, comment.getId().toHexString(), requestCommentDto);
@@ -192,7 +192,7 @@ public class CommentPrivateServiceTest {
         commentRepository.save(comments.getFirst());
         String notValidCommentId = "507f191e810c19729de860ea";
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
         assertThatExceptionOfType(NotFoundException.class)
@@ -204,7 +204,7 @@ public class CommentPrivateServiceTest {
     public void testDeleteComment() {
         Comment comment = commentRepository.save(comments.getFirst());
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
         CommentDto commentDto = commentPrivateService.deleteComment(USER_ID, comment.getId().toHexString());
@@ -219,7 +219,7 @@ public class CommentPrivateServiceTest {
         commentBeforeSave.setLikes(0);
         Comment comment = commentRepository.save(commentBeforeSave);
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
         commentPrivateService.addLike(comment.getId().toHexString(), USER_ID);
@@ -241,7 +241,7 @@ public class CommentPrivateServiceTest {
         commentBeforeSave.setLikes(0);
         Comment comment = commentRepository.save(commentBeforeSave);
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
         for (int i = 0; i < likeCommentConfig.getMaxLikesModalView(); i++) {
@@ -267,7 +267,7 @@ public class CommentPrivateServiceTest {
         commentBeforeSave.setLikes(0);
         Comment comment = commentRepository.save(commentBeforeSave);
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
         for (int i = 0; i < countLikes; i++) {
@@ -293,7 +293,7 @@ public class CommentPrivateServiceTest {
         commentBeforeSave.setLikes(0);
         Comment comment = commentRepository.save(commentBeforeSave);
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
         for (int i = 0; i < countLikes; i++) {
@@ -326,7 +326,7 @@ public class CommentPrivateServiceTest {
         commentBeforeSave.setLikes(0);
         Comment comment = commentRepository.save(commentBeforeSave);
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
         for (int i = 0; i < countLikes; i++) {

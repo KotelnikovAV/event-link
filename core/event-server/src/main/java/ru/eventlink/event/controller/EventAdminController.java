@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-import ru.eventlink.client.event.EventClient;
+import ru.eventlink.client.event.EventAdminClient;
 import ru.eventlink.dto.event.EventFullDto;
 import ru.eventlink.dto.event.UpdateEventAdminRequest;
 import ru.eventlink.enums.State;
@@ -21,7 +21,7 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/events")
 @Slf4j
 @RequiredArgsConstructor
-public class EventAdminController implements EventClient {
+public class EventAdminController implements EventAdminClient {
     private final EventAdminService eventAdminService;
 
     @GetMapping

@@ -3,6 +3,7 @@ package ru.eventlink.fallback.requests;
 import org.springframework.stereotype.Component;
 import ru.eventlink.client.requests.RequestClient;
 import ru.eventlink.dto.requests.ParticipationRequestDto;
+import ru.eventlink.enums.Status;
 import ru.eventlink.exception.ServerUnavailableException;
 
 import java.util.List;
@@ -27,7 +28,7 @@ public class RequestFallback implements RequestClient {
     }
 
     @Override
-    public List<ParticipationRequestDto> findAllRequestsByEventId(Long eventId, String status) {
+    public List<ParticipationRequestDto> findAllRequestsByEventId(Long eventId, Status status) {
         throw new ServerUnavailableException("Endpoint /api/v1/users/requests/events/{eventId}/status method GET is unavailable");
     }
 
@@ -37,7 +38,7 @@ public class RequestFallback implements RequestClient {
     }
 
     @Override
-    public List<ParticipationRequestDto> updateRequest(Set<Long> requestsId, String status) {
+    public List<ParticipationRequestDto> updateRequest(Set<Long> requestsId, Status status) {
         throw new ServerUnavailableException("Endpoint /api/v1/users/requests/status method PATCH is unavailable");
     }
 
