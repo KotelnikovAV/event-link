@@ -1,7 +1,7 @@
 package ru.eventlink.fallback.user;
 
 import org.springframework.stereotype.Component;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.user.UserAdminClient;
 import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.dto.user.UserRequestDto;
 import ru.eventlink.exception.ServerUnavailableException;
@@ -9,7 +9,7 @@ import ru.eventlink.exception.ServerUnavailableException;
 import java.util.List;
 
 @Component
-public class UserFallback implements UserClient {
+public class UserAdminFallback implements UserAdminClient {
     @Override
     public List<UserDto> getAllUsers(List<Long> ids, Integer page, Integer size) {
         throw new ServerUnavailableException("Endpoint /api/v1/admin/users method GET is unavailable");

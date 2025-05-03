@@ -9,19 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import ru.eventlink.category.model.Category;
 import ru.eventlink.category.repository.CategoryRepository;
-import ru.eventlink.client.RecommendationsClient;
-import ru.eventlink.client.UserActionClient;
-import ru.eventlink.client.requests.RequestClient;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.GrpcClient;
+import ru.eventlink.client.RestClient;
 import ru.eventlink.dto.event.*;
 import ru.eventlink.dto.requests.EventRequestStatusUpdateRequestDto;
 import ru.eventlink.dto.requests.EventRequestStatusUpdateResultDto;
 import ru.eventlink.dto.requests.ParticipationRequestDto;
 import ru.eventlink.enums.State;
 import ru.eventlink.enums.Status;
-import ru.eventlink.event.mapper.EventMapper;
-import ru.eventlink.event.mapper.LocationMapper;
-import ru.eventlink.event.mapper.RecommendationsMapper;
+import ru.eventlink.event.mapper.Mapper;
 import ru.eventlink.event.model.Event;
 import ru.eventlink.event.repository.EventRepository;
 import ru.eventlink.exception.DataTimeException;
@@ -32,6 +28,9 @@ import ru.eventlink.stats.proto.RecommendedEventProto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static ru.eventlink.event.model.QEvent.event;
 import static ru.eventlink.utility.Constants.MAXIMUM_SIZE_OF_THE_RECOMMENDATION_LIST;
@@ -41,31 +40,20 @@ import static ru.eventlink.utility.Constants.MAXIMUM_SIZE_OF_THE_RECOMMENDATION_
 public class EventPrivateServiceImpl extends EventService implements EventPrivateService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
-    private final UserClient userClient;
-    private final RequestClient requestClient;
-    private final EventMapper eventMapper;
-    private final LocationMapper locationMapper;
-    private final RecommendationsMapper recommendationsMapper;
-    private final UserActionClient userActionClient;
+    private final Mapper mapper;
+    private final RestClient restClient;
+    private final Executor asyncExecutor = Executors.newFixedThreadPool(2);
 
     public EventPrivateServiceImpl(EventRepository eventRepository,
                                    CategoryRepository categoryRepository,
-                                   UserClient userClient,
-                                   RequestClient requestClient,
-                                   EventMapper eventMapper,
-                                   LocationMapper locationMapper,
-                                   RecommendationsMapper recommendationsMapper,
-                                   UserActionClient userActionClient,
-                                   RecommendationsClient recommendationsClient) {
-        super(recommendationsClient);
+                                   Mapper mapper,
+                                   GrpcClient grpcClient,
+                                   RestClient restClient) {
+        super(grpcClient);
         this.eventRepository = eventRepository;
         this.categoryRepository = categoryRepository;
-        this.userClient = userClient;
-        this.eventMapper = eventMapper;
-        this.locationMapper = locationMapper;
-        this.recommendationsMapper = recommendationsMapper;
-        this.userActionClient = userActionClient;
-        this.requestClient = requestClient;
+        this.mapper = mapper;
+        this.restClient = restClient;
     }
 
     @Transactional
@@ -73,7 +61,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
     public EventFullDto addEvent(NewEventDto newEventDto, long userId) {
         log.info("The beginning of the process of creating a event");
 
-        if (!userClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
@@ -96,7 +84,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
             newEventDto.setParticipantLimit(0L);
         }
 
-        Event newEvent = eventMapper.newEventDtoToEvent(newEventDto);
+        Event newEvent = mapper.newEventDtoToEvent(newEventDto);
         newEvent.setCategory(category);
         newEvent.setCreatedOn(LocalDateTime.now());
         newEvent.setInitiatorId(userId);
@@ -106,7 +94,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
         newEvent.setLikes(0L);
 
         Event event = eventRepository.save(newEvent);
-        EventFullDto eventFullDto = eventMapper.eventToEventFullDto(event);
+        EventFullDto eventFullDto = mapper.eventToEventFullDto(event);
         eventFullDto.setRating(0.0);
 
         log.info("The event has been created");
@@ -117,7 +105,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
     public EventFullDto findEventByUserIdAndEventId(long userId, long eventId) {
         log.info("The beginning of the process of finding a event");
 
-        if (!userClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
@@ -125,9 +113,9 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
         setRating(List.of(event));
 
-        EventFullDto eventFullDto = eventMapper.eventToEventFullDto(event);
+        EventFullDto eventFullDto = mapper.eventToEventFullDto(event);
 
-        userActionClient.collectUserAction(eventId, userId, ActionTypeProto.ACTION_VIEW);
+        grpcClient.collectUserAction(eventId, userId, ActionTypeProto.ACTION_VIEW);
 
         log.info("The event was found");
         return eventFullDto;
@@ -137,7 +125,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
     public List<EventShortDto> findEventsByUser(long userId, int page, int size) {
         log.info("The beginning of the process of finding a events");
 
-        if (!userClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
@@ -147,11 +135,11 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
         List<Event> events = pageEvents.getContent();
         setRating(events);
 
-        List<EventShortDto> eventsShortDto = eventMapper.listEventToListEventShortDto(events);
+        List<EventShortDto> eventsShortDto = mapper.listEventToListEventShortDto(events);
 
         eventsShortDto.stream()
                 .map(EventShortDto::getId)
-                .forEach(eventId -> userActionClient
+                .forEach(eventId -> grpcClient
                         .collectUserAction(eventId, userId, ActionTypeProto.ACTION_VIEW));
 
         log.info("The events was found");
@@ -163,11 +151,11 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
     public EventFullDto updateEvent(UpdateEventUserRequest updateEvent, long userId, long eventId) {
         log.info("The beginning of the process of updates a event");
 
-        if (!userClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
         if (event.getState().equals(State.PUBLISHED)) {
@@ -196,7 +184,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
             }
         }
         if (updateEvent.getLocation() != null) {
-            event.setLocation(locationMapper.locationDtoToLocation(updateEvent.getLocation()));
+            event.setLocation(mapper.locationDtoToLocation(updateEvent.getLocation()));
         }
         if (updateEvent.getPaid() != null) {
             event.setPaid(updateEvent.getPaid());
@@ -218,22 +206,16 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
         }
 
         log.info("The events was update");
-        return eventMapper.eventToEventFullDto(event);
+        return mapper.eventToEventFullDto(event);
     }
 
     @Override
     public List<ParticipationRequestDto> findRequestByEventId(long userId, long eventId) {
         log.info("The beginning of the process of finding a requests");
 
-        if (!userClient.getUserExists(userId)) {
-            throw new NotFoundException("User with id=" + userId + " was not found");
-        }
+        checkUserAndEvent(userId, eventId);
 
-        if (!eventRepository.existsById(eventId)) {
-            throw new NotFoundException("Event with id=" + eventId + " was not found");
-        }
-
-        List<ParticipationRequestDto> requests = requestClient.findAllRequestsByEventId(eventId, null);
+        List<ParticipationRequestDto> requests = restClient.findAllRequestsByEventId(eventId, null);
 
         log.info("The requests was found");
         return requests;
@@ -246,18 +228,18 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
                                                                     long eventId) {
         log.info("The beginning of the process of update a requests");
 
-        if (!userClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
         if (event.getParticipantLimit() != 0 && event.getParticipantLimit().equals(event.getConfirmedRequests())) {
             throw new RestrictionsViolationException("The limit on applications for this event has been reached");
         }
 
-        List<ParticipationRequestDto> requests = requestClient
+        List<ParticipationRequestDto> requests = restClient
                 .findAllRequestsByRequestsId(updateRequests.getRequestIds());
 
         if (requests.stream()
@@ -267,7 +249,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
                     "in the PENDING state");
         }
 
-        requests = requestClient.updateRequest(updateRequests.getRequestIds(), updateRequests.getStatus().name());
+        requests = restClient.updateRequest(updateRequests.getRequestIds(), updateRequests.getStatus());
 
         if (updateRequests.getStatus().equals(Status.CONFIRMED)) {
             event.setConfirmedRequests(event.getConfirmedRequests() + updateRequests.getRequestIds().size());
@@ -281,7 +263,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
     public List<RecommendationsDto> findRecommendations(long userId) {
         log.info("The beginning of the process of finding recommendations");
 
-        List<RecommendedEventProto> recommendations = recommendationsClient
+        List<RecommendedEventProto> recommendations = grpcClient
                 .getRecommendationsForUser(userId, MAXIMUM_SIZE_OF_THE_RECOMMENDATION_LIST);
 
         if (CollectionUtils.isEmpty(recommendations)) {
@@ -289,7 +271,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
         }
 
         log.info("The recommendations found");
-        return recommendationsMapper.listRecommendedEventProtoToListRecommendationsDto(recommendations);
+        return mapper.listRecommendedEventProtoToListRecommendationsDto(recommendations);
     }
 
     private EventRequestStatusUpdateResultDto createEventRequestStatusUpdateResult(List<ParticipationRequestDto> requests) {
@@ -303,5 +285,21 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
         resultDto.setConfirmedRequests(confirmedRequests);
         resultDto.setRejectedRequests(rejectedRequests);
         return resultDto;
+    }
+
+    private void checkUserAndEvent(long userId, long eventId) {
+        CompletableFuture<Boolean> userExistsFuture = CompletableFuture.supplyAsync(
+                () -> restClient.getUserExists(userId), asyncExecutor
+        );
+
+        CompletableFuture<Boolean> eventExistsFuture = CompletableFuture.supplyAsync(
+                () -> eventRepository.existsById(eventId), asyncExecutor
+        );
+
+        userExistsFuture.thenCombine(eventExistsFuture, (userExist, eventExist) -> {
+            if (!userExist) throw new NotFoundException("User with id=" + userId + " was not found");
+            if (!eventExist) throw new NotFoundException("Event with id=" + eventId + " was not found");
+            return null;
+        }).join();
     }
 }

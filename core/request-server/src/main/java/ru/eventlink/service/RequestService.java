@@ -1,6 +1,7 @@
 package ru.eventlink.service;
 
 import ru.eventlink.dto.requests.ParticipationRequestDto;
+import ru.eventlink.enums.Status;
 
 import java.util.List;
 import java.util.Set;
@@ -15,9 +16,9 @@ public interface RequestService {
 
     List<ParticipationRequestDto> findAllRequestsByRequestsId(Set<Long> requestsId);
 
-    List<ParticipationRequestDto> updateRequest(Set<Long> requestsId, String status);
+    List<ParticipationRequestDto> updateRequest(Set<Long> requestsId, Status status);
 
-    boolean findExistRequests(Long eventId, Long userId, String status);
+    boolean findExistRequests(Long eventId, Long userId, Status status);
 
-    List<ParticipationRequestDto> findAllRequestsByEventIdAndStatus(Long eventId, String status);
+    List<ParticipationRequestDto> findAllRequestsByEventIdAndStatus(Long eventId, Status status);
 }

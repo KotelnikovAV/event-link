@@ -12,7 +12,7 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.user.UserAdminClient;
 import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.exception.NotFoundException;
 import ru.eventlink.exception.RestrictionsViolationException;
@@ -41,7 +41,7 @@ public class LikeCommentServiceTest {
     private LikeCommentService likeCommentService;
 
     @MockBean
-    private UserClient userClient;
+    private UserAdminClient userAdminClient;
 
     private static final Long USER_ID = 1L;
 
@@ -106,9 +106,9 @@ public class LikeCommentServiceTest {
     public void testFindLikesByCommentIdIfHaveLikes() {
         likeCommentRepository.saveAll(likeComments);
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
-        when(userClient.getAllUsers(anyList(), anyInt(), anyInt()))
+        when(userAdminClient.getAllUsers(anyList(), anyInt(), anyInt()))
                 .thenReturn(users);
 
         List<UserDto> usersDto = likeCommentService.findLikesByCommentId(USER_ID, COMMENT_ID.toHexString(), 0);
@@ -119,9 +119,9 @@ public class LikeCommentServiceTest {
 
     @Test
     public void testFindLikesByCommentIdIfDontHaveLikes() {
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
-        when(userClient.getAllUsers(anyList(), anyInt(), anyInt()))
+        when(userAdminClient.getAllUsers(anyList(), anyInt(), anyInt()))
                 .thenReturn(users);
 
         List<UserDto> usersDto = likeCommentService.findLikesByCommentId(USER_ID, COMMENT_ID.toHexString(), 0);
@@ -131,7 +131,7 @@ public class LikeCommentServiceTest {
 
     @Test
     public void testFindLikesByCommentIdIfUsersDontExist() {
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(false);
 
         assertThatExceptionOfType(NotFoundException.class)

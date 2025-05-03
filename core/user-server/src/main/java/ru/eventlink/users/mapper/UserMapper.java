@@ -13,6 +13,7 @@ import java.util.List;
 public interface UserMapper {
     UserDto userToUserDto(User user);
 
+    @Mapping(target = "version", ignore = true)
     @Mapping(target = "rating", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "countFollowers", ignore = true)

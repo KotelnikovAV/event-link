@@ -30,4 +30,7 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
     @Override
     @EntityGraph(attributePaths = {"category", "location"})
     Page<Event> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"category", "location"})
+    Optional<Event> findByIdAndInitiatorId(Long id, Long initiatorId);
 }

@@ -11,8 +11,8 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-import ru.eventlink.client.event.EventClient;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.event.EventAdminClient;
+import ru.eventlink.client.user.UserAdminClient;
 import ru.eventlink.comment.model.Comment;
 import ru.eventlink.comment.repository.CommentRepository;
 import ru.eventlink.dto.comment.CommentDto;
@@ -44,10 +44,10 @@ public class CommentPublicTest {
     private LikeCommentRepository likeCommentRepository;
 
     @MockBean
-    private EventClient eventClient;
+    private EventAdminClient eventAdminClient;
 
     @MockBean
-    private UserClient userClient;
+    private UserAdminClient userAdminClient;
 
     private static final Long EVENT_ID = 1L;
 
@@ -87,10 +87,10 @@ public class CommentPublicTest {
     public void testFindAllCommentsByEventIdAndSortDate() {
         commentRepository.saveAll(comments);
 
-        when(eventClient.findExistEventByEventId(anyLong()))
+        when(eventAdminClient.findExistEventByEventId(anyLong()))
                 .thenReturn(true);
 
-        when(userClient.getAllUsers(any(), anyInt(), anyInt()))
+        when(userAdminClient.getAllUsers(any(), anyInt(), anyInt()))
                 .thenReturn(List.of());
 
         List<CommentDto> commentsDto = commentPublicService.findAllCommentsByEventId(EVENT_ID, CommentSort.DATE, 0, 10);
@@ -104,10 +104,10 @@ public class CommentPublicTest {
     public void testFindAllCommentsByEventIdAndSortLike() {
         commentRepository.saveAll(comments);
 
-        when(eventClient.findExistEventByEventId(anyLong()))
+        when(eventAdminClient.findExistEventByEventId(anyLong()))
                 .thenReturn(true);
 
-        when(userClient.getAllUsers(any(), anyInt(), anyInt()))
+        when(userAdminClient.getAllUsers(any(), anyInt(), anyInt()))
                 .thenReturn(List.of());
 
         List<CommentDto> commentsDto = commentPublicService.findAllCommentsByEventId(EVENT_ID, CommentSort.LIKES, 0, 10);

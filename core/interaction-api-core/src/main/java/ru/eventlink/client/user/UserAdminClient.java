@@ -9,13 +9,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.dto.user.UserRequestDto;
-import ru.eventlink.fallback.user.UserFallback;
+import ru.eventlink.fallback.user.UserAdminFallback;
 
 import java.util.List;
 
 
-@FeignClient(name = "user-server", fallback = UserFallback.class)
-public interface UserClient {
+@FeignClient(name = "user-server", fallback = UserAdminFallback.class)
+public interface UserAdminClient {
     @GetMapping("/api/v1/admin/users")
     @Validated
     List<UserDto> getAllUsers(@RequestParam(required = false) List<Long> ids,

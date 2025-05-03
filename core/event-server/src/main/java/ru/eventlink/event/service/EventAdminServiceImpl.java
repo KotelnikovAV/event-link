@@ -9,15 +9,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import ru.eventlink.category.model.Category;
 import ru.eventlink.category.repository.CategoryRepository;
-import ru.eventlink.client.RecommendationsClient;
+import ru.eventlink.client.GrpcClient;
 import ru.eventlink.dto.event.EventFullDto;
 import ru.eventlink.dto.event.UpdateEventAdminRequest;
 import ru.eventlink.dto.user.UserShortDto;
 import ru.eventlink.enums.EventPublicSort;
 import ru.eventlink.enums.State;
 import ru.eventlink.enums.StateActionAdmin;
-import ru.eventlink.event.mapper.EventMapper;
-import ru.eventlink.event.mapper.LocationMapper;
+import ru.eventlink.event.mapper.Mapper;
 import ru.eventlink.event.model.Event;
 import ru.eventlink.event.repository.EventRepository;
 import ru.eventlink.exception.DataTimeException;
@@ -34,19 +33,16 @@ import static ru.eventlink.event.model.QEvent.event;
 public class EventAdminServiceImpl extends EventService implements EventAdminService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
-    private final EventMapper eventMapper;
-    private final LocationMapper locationMapper;
+    private final Mapper mapper;
 
     public EventAdminServiceImpl(EventRepository eventRepository,
                                  CategoryRepository categoryRepository,
-                                 EventMapper eventMapper,
-                                 LocationMapper locationMapper,
-                                 RecommendationsClient recommendationsClient) {
-        super(recommendationsClient);
+                                 Mapper mapper,
+                                 GrpcClient grpcClient) {
+        super(grpcClient);
         this.eventRepository = eventRepository;
         this.categoryRepository = categoryRepository;
-        this.eventMapper = eventMapper;
-        this.locationMapper = locationMapper;
+        this.mapper = mapper;
     }
 
     @Override
@@ -97,7 +93,7 @@ public class EventAdminServiceImpl extends EventService implements EventAdminSer
         List<Event> events = pageEvents.getContent();
         setRating(events);
         log.info("The events was found by admin");
-        return eventMapper.listEventToListEventFullDto(events);
+        return mapper.listEventToListEventFullDto(events);
     }
 
     @Transactional
@@ -129,7 +125,7 @@ public class EventAdminServiceImpl extends EventService implements EventAdminSer
             }
         }
         if (updateEvent.getLocation() != null) {
-            event.setLocation(locationMapper.locationDtoToLocation(updateEvent.getLocation()));
+            event.setLocation(mapper.locationDtoToLocation(updateEvent.getLocation()));
         }
         if (updateEvent.getPaid() != null) {
             event.setPaid(updateEvent.getPaid());
@@ -148,7 +144,7 @@ public class EventAdminServiceImpl extends EventService implements EventAdminSer
         }
 
         log.info("The events was update by admin");
-        return eventMapper.eventToEventFullDto(event);
+        return mapper.eventToEventFullDto(event);
     }
 
     @Override
@@ -162,7 +158,7 @@ public class EventAdminServiceImpl extends EventService implements EventAdminSer
         log.info("The beginning of the process of finding state events");
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
-        EventFullDto eventFullDto = eventMapper.eventToEventFullDto(event);
+        EventFullDto eventFullDto = mapper.eventToEventFullDto(event);
         eventFullDto.setInitiator(new UserShortDto(event.getInitiatorId(), null));
         return eventFullDto;
     }

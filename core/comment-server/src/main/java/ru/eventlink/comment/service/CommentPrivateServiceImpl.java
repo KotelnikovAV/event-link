@@ -4,8 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.eventlink.client.event.EventClient;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.RestClient;
 import ru.eventlink.comment.mapper.CommentMapper;
 import ru.eventlink.comment.model.Comment;
 import ru.eventlink.comment.repository.CommentRepository;
@@ -23,24 +22,25 @@ import java.util.List;
 @Slf4j
 public class CommentPrivateServiceImpl extends CommentService implements CommentPrivateService {
     private final LikeCommentService likeCommentService;
-    private final LikeCommentConfig likeCommentConfig;
+    private final LikeCommentConfig likeCommentConfig;   
+    private final RestClient restClient;
 
     public CommentPrivateServiceImpl(CommentRepository commentRepository,
                                      CommentMapper commentMapper,
-                                     UserClient userClient,
-                                     EventClient eventClient,
                                      LikeCommentService likeCommentService,
-                                     LikeCommentConfig likeCommentConfig) {
-        super(commentRepository, commentMapper, userClient, eventClient);
+                                     LikeCommentConfig likeCommentConfig,
+                                     RestClient restClient) {
+        super(commentRepository, commentMapper);
         this.likeCommentService = likeCommentService;
         this.likeCommentConfig = likeCommentConfig;
+        this.restClient = restClient;
     }
 
     @Override
     public CommentDto addComment(Long userId, Long eventId, RequestCommentDto commentDto) {
         log.info("Adding comment");
 
-        checkUserAndEventExists(userId, eventId);
+        restClient.checkUserAndEventExists(userId, eventId);
 
         Comment comment = commentMapper.requestCommentDtoToComment(commentDto);
         comment.setCountResponse(0);
@@ -56,7 +56,7 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
     public CommentDto updateComment(Long userId, String commentId, UpdateCommentDto updateCommentDto) {
         log.info("Updating comment");
 
-        checkUserAndEventExists(userId, null);
+        restClient.checkUserAndEventExists(userId, null);
 
         Comment comment = commentRepository.findById(new ObjectId(commentId))
                 .orElseThrow(() -> new NotFoundException("Comment " + commentId + " not found"));
@@ -73,7 +73,7 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
     public CommentDto addSubComment(Long userId, String parentCommentId, RequestCommentDto commentDto) {
         log.info("Adding sub comment");
 
-        checkUserAndEventExists(userId, null);
+        restClient.checkUserAndEventExists(userId, null);
 
         ObjectId id = new ObjectId(parentCommentId);
 
@@ -96,7 +96,7 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
     public CommentDto deleteComment(Long userId, String commentId) {
         log.info("Deleting comment");
 
-        checkUserAndEventExists(userId, null);
+        restClient.checkUserAndEventExists(userId, null);
 
         Comment comment = commentRepository.findById(new ObjectId(commentId))
                 .orElseThrow(() -> new NotFoundException("Comment " + commentId + " not found"));
@@ -112,7 +112,7 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
     public void addLike(String commentId, Long authorId) {
         log.info("Adding like");
 
-        checkUserAndEventExists(authorId, null);
+        restClient.checkUserAndEventExists(authorId, null);
 
         ObjectId id = new ObjectId(commentId);
         likeCommentService.addLike(id, authorId);
@@ -140,7 +140,7 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
     public void deleteLike(String commentId, Long authorId) {
         log.info("Deleting like");
 
-        checkUserAndEventExists(authorId, null);
+        restClient.checkUserAndEventExists(authorId, null);
 
         ObjectId id = new ObjectId(commentId);
         likeCommentService.deleteLike(id, authorId);
@@ -158,5 +158,4 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
         commentRepository.save(comment);
         log.info("Deleted like");
     }
-
 }

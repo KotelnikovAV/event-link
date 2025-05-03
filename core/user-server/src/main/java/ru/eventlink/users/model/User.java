@@ -41,6 +41,10 @@ public class User {
     @Column
     Integer countFriends;
 
+    @NotNull
+    @Version
+    Integer version;
+
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;

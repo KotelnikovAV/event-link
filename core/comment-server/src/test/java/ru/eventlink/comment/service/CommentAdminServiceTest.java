@@ -11,7 +11,7 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.user.UserAdminClient;
 import ru.eventlink.comment.model.Comment;
 import ru.eventlink.comment.repository.CommentRepository;
 import ru.eventlink.dto.comment.CommentUserDto;
@@ -42,7 +42,7 @@ public class CommentAdminServiceTest {
     private LikeCommentRepository likeCommentRepository;
 
     @MockBean
-    private UserClient userClient;
+    private UserAdminClient userAdminClient;
 
     private static final Long USER_ID = 1L;
 
@@ -84,7 +84,7 @@ public class CommentAdminServiceTest {
     public void testFindAllCommentsByUserIdAndSortDate() {
         commentRepository.saveAll(comments);
 
-        when(userClient.getUserExists(anyLong()))
+        when(userAdminClient.getUserExists(anyLong()))
                 .thenReturn(true);
 
         List<CommentUserDto> commentsUserDto = commentAdminService.findAllCommentsByUserId(USER_ID, CommentSort.DATE, 0, 10);

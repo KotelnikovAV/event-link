@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.user.UserAdminClient;
 import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.dto.user.UserRequestDto;
 import ru.eventlink.users.service.UserService;
@@ -19,7 +19,7 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/users")
 @RequiredArgsConstructor
 @Slf4j
-public class UserAdminController implements UserClient {
+public class UserAdminController implements UserAdminClient {
     private final UserService userService;
 
     @GetMapping

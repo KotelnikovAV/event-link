@@ -4,10 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.eventlink.client.UserActionClient;
-import ru.eventlink.client.event.EventClient;
-import ru.eventlink.client.requests.RequestClient;
-import ru.eventlink.client.user.UserClient;
+import ru.eventlink.client.GrpcClient;
+import ru.eventlink.client.RestClient;
 import ru.eventlink.dto.event.EventFullDto;
 import ru.eventlink.enums.Status;
 import ru.eventlink.enums.StatusLike;
@@ -18,6 +16,9 @@ import ru.eventlink.repository.LikeRepository;
 import ru.eventlink.stats.proto.ActionTypeProto;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static ru.eventlink.utility.Constants.*;
 
@@ -26,25 +27,18 @@ import static ru.eventlink.utility.Constants.*;
 @RequiredArgsConstructor
 public class LikeServiceImpl implements LikeService {
     private final LikeRepository likeRepository;
-    private final UserClient userClient;
-    private final EventClient eventClient;
-    private final RequestClient requestClient;
-    private final UserActionClient userActionClient;
+    private final RestClient restClient;
+    private final GrpcClient grpcClient;
+    private final Executor asyncExecutor = Executors.newFixedThreadPool(2);
 
     @Override
     @Transactional
     public EventFullDto addLike(long eventId, long userId, StatusLike statusLike) {
         log.info("The beginning of the process of adding like to an event");
 
-        if (!userClient.getUserExists(userId)) {
-            throw new NotFoundException("User with id=" + userId + " was not found");
-        }
+        checkUserAndRequest(eventId, userId);
 
-        EventFullDto event = eventClient.findEventById(eventId);
-
-        if (!requestClient.findExistRequests(eventId, userId, Status.CONFIRMED.name())) {
-            throw new RestrictionsViolationException("In order to like, you must be a participant in the event");
-        }
+        EventFullDto event = restClient.findEventById(eventId);
 
         if (likeRepository.existsByEventIdAndUserId(eventId, userId)) {
             throw new RestrictionsViolationException("You have already rated this event");
@@ -61,7 +55,7 @@ public class LikeServiceImpl implements LikeService {
         like.setCreated(LocalDateTime.now());
         likeRepository.save(like);
 
-        userActionClient.collectUserAction(eventId, userId, ActionTypeProto.ACTION_LIKE);
+        grpcClient.collectUserAction(eventId, userId, ActionTypeProto.ACTION_LIKE);
 
         return changeRatingUserAndEvent(event, statusLike, DIFFERENCE_RATING_BY_ADD);
     }
@@ -71,11 +65,11 @@ public class LikeServiceImpl implements LikeService {
     public EventFullDto updateLike(long eventId, long userId, StatusLike statusLike) {
         log.info("The beginning of the process of updating like to an event");
 
-        if (!userClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        EventFullDto event = eventClient.findEventById(eventId);
+        EventFullDto event = restClient.findEventById(eventId);
 
         Like like = likeRepository.findByEventIdAndUserId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("You didn't rate this event"));
@@ -93,11 +87,11 @@ public class LikeServiceImpl implements LikeService {
     public void deleteLike(long eventId, long userId) {
         log.info("The beginning of the process of deleting like to an event");
 
-        if (!userClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        EventFullDto event = eventClient.findEventById(eventId);
+        EventFullDto event = restClient.findEventById(eventId);
 
         Like like = likeRepository.findByEventIdAndUserId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("You didn't rate this event"));
@@ -111,16 +105,32 @@ public class LikeServiceImpl implements LikeService {
 
     private EventFullDto changeRatingUserAndEvent(EventFullDto event, StatusLike statusLike, int difference) {
         if (statusLike == StatusLike.LIKE) {
-            userClient.updateRatingUser(event.getInitiator().getId(), difference);
-            eventClient.updateRatingEvent(event.getId(), difference);
+            restClient.updateRatingUser(event.getInitiator().getId(), difference);
+            restClient.updateRatingEvent(event.getId(), difference);
             event.setLikes(event.getLikes() + difference);
             return event;
         } else if (statusLike == StatusLike.DISLIKE) {
-            userClient.updateRatingUser(event.getInitiator().getId(), difference * -1);
-            eventClient.updateRatingEvent(event.getId(), difference * -1);
+            restClient.updateRatingUser(event.getInitiator().getId(), difference * -1);
+            restClient.updateRatingEvent(event.getId(), difference * -1);
             event.setLikes(event.getLikes() - difference);
             return event;
         }
         return null;
+    }
+
+    private void checkUserAndRequest(long eventId, long userId) {
+        CompletableFuture<Boolean> userExistsFuture = CompletableFuture.supplyAsync(
+                () -> restClient.getUserExists(userId), asyncExecutor
+        );
+
+        CompletableFuture<Boolean> requestExistsFuture = CompletableFuture.supplyAsync(
+                () -> restClient.findExistRequests(eventId, userId, Status.CONFIRMED), asyncExecutor
+        );
+
+        userExistsFuture.thenCombine(requestExistsFuture, (userExist, requestExist) -> {
+            if (!userExist) throw new NotFoundException("User with id=" + userId + " was not found");
+            if (!requestExist) throw new RestrictionsViolationException("In order to like, you must be a participant in the event");
+            return null;
+        }).join();
     }
 }

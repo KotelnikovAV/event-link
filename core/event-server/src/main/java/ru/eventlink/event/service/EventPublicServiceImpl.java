@@ -6,12 +6,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import ru.eventlink.client.RecommendationsClient;
+import ru.eventlink.client.GrpcClient;
 import ru.eventlink.dto.event.EventFullDto;
 import ru.eventlink.dto.event.EventShortDto;
 import ru.eventlink.enums.EventPublicSort;
 import ru.eventlink.enums.State;
-import ru.eventlink.event.mapper.EventMapper;
+import ru.eventlink.event.mapper.Mapper;
 import ru.eventlink.event.model.Event;
 import ru.eventlink.event.repository.EventRepository;
 import ru.eventlink.exception.DataTimeException;
@@ -26,14 +26,14 @@ import static ru.eventlink.event.model.QEvent.event;
 @Slf4j
 public class EventPublicServiceImpl extends EventService implements EventPublicService {
     private final EventRepository eventRepository;
-    private final EventMapper eventMapper;
+    private final Mapper mapper;
 
-    public EventPublicServiceImpl(RecommendationsClient recommendationsClient,
+    public EventPublicServiceImpl(GrpcClient grpcClient,
                                   EventRepository eventRepository,
-                                  EventMapper eventMapper) {
-        super(recommendationsClient);
+                                  Mapper mapper) {
+        super(grpcClient);
         this.eventRepository = eventRepository;
-        this.eventMapper = eventMapper;
+        this.mapper = mapper;
     }
 
     @Override
@@ -79,7 +79,7 @@ public class EventPublicServiceImpl extends EventService implements EventPublicS
 
         setRating(events.getContent());
         log.info("The events was found by public");
-        return eventMapper.listEventToListEventShortDto(events.getContent());
+        return mapper.listEventToListEventShortDto(events.getContent());
     }
 
     @Override
@@ -91,6 +91,6 @@ public class EventPublicServiceImpl extends EventService implements EventPublicS
 
         setRating(List.of(event));
         log.info("The event was found by public");
-        return eventMapper.eventToEventFullDto(event);
+        return mapper.eventToEventFullDto(event);
     }
 }

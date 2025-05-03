@@ -11,7 +11,7 @@
 //import ru.eventlink.client.StatClient;
 //import ru.eventlink.client.UserActionClient;
 //import ru.eventlink.client.requests.RequestClient;
-//import ru.eventlink.client.user.UserClient;
+//import ru.eventlink.client.user.UserAdminClient;
 //import ru.eventlink.dto.event.EventFullDto;
 //import ru.eventlink.enums.State;
 //import ru.eventlink.event.model.Event;
@@ -40,7 +40,7 @@
 //    private StatClient statClient;
 //
 //    @MockBean
-//    private UserClient userClient;
+//    private UserAdminClient userClient;
 //
 //    @MockBean
 //    private RequestClient requestClient;
