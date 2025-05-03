@@ -43,7 +43,7 @@ public class RequestFallback implements RequestClient {
     }
 
     @Override
-    public boolean findExistRequests(Long eventId, Long userId, String status) {
+    public boolean findExistRequests(Long eventId, Long userId, Status status) {
         throw new ServerUnavailableException("Endpoint api/v1/users/requests/existence method GET is unavailable");
     }
 }

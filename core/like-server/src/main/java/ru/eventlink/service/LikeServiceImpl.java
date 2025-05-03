@@ -4,10 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.eventlink.client.UserActionClient;
-import ru.eventlink.client.event.EventAdminClient;
-import ru.eventlink.client.requests.RequestClient;
-import ru.eventlink.client.user.UserAdminClient;
+import ru.eventlink.client.GrpcClient;
+import ru.eventlink.client.RestClient;
 import ru.eventlink.dto.event.EventFullDto;
 import ru.eventlink.enums.Status;
 import ru.eventlink.enums.StatusLike;
@@ -26,23 +24,21 @@ import static ru.eventlink.utility.Constants.*;
 @RequiredArgsConstructor
 public class LikeServiceImpl implements LikeService {
     private final LikeRepository likeRepository;
-    private final UserAdminClient userAdminClient;
-    private final EventAdminClient eventAdminClient;
-    private final RequestClient requestClient;
-    private final UserActionClient userActionClient;
+    private final RestClient restClient;
+    private final GrpcClient grpcClient;
 
     @Override
     @Transactional
     public EventFullDto addLike(long eventId, long userId, StatusLike statusLike) {
         log.info("The beginning of the process of adding like to an event");
 
-        if (!userAdminClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        EventFullDto event = eventAdminClient.findEventById(eventId);
+        EventFullDto event = restClient.findEventById(eventId);
 
-        if (!requestClient.findExistRequests(eventId, userId, Status.CONFIRMED.name())) {
+        if (!restClient.findExistRequests(eventId, userId, Status.CONFIRMED)) {
             throw new RestrictionsViolationException("In order to like, you must be a participant in the event");
         }
 
@@ -61,7 +57,7 @@ public class LikeServiceImpl implements LikeService {
         like.setCreated(LocalDateTime.now());
         likeRepository.save(like);
 
-        userActionClient.collectUserAction(eventId, userId, ActionTypeProto.ACTION_LIKE);
+        grpcClient.collectUserAction(eventId, userId, ActionTypeProto.ACTION_LIKE);
 
         return changeRatingUserAndEvent(event, statusLike, DIFFERENCE_RATING_BY_ADD);
     }
@@ -71,11 +67,11 @@ public class LikeServiceImpl implements LikeService {
     public EventFullDto updateLike(long eventId, long userId, StatusLike statusLike) {
         log.info("The beginning of the process of updating like to an event");
 
-        if (!userAdminClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        EventFullDto event = eventAdminClient.findEventById(eventId);
+        EventFullDto event = restClient.findEventById(eventId);
 
         Like like = likeRepository.findByEventIdAndUserId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("You didn't rate this event"));
@@ -93,11 +89,11 @@ public class LikeServiceImpl implements LikeService {
     public void deleteLike(long eventId, long userId) {
         log.info("The beginning of the process of deleting like to an event");
 
-        if (!userAdminClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        EventFullDto event = eventAdminClient.findEventById(eventId);
+        EventFullDto event = restClient.findEventById(eventId);
 
         Like like = likeRepository.findByEventIdAndUserId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("You didn't rate this event"));
@@ -111,13 +107,13 @@ public class LikeServiceImpl implements LikeService {
 
     private EventFullDto changeRatingUserAndEvent(EventFullDto event, StatusLike statusLike, int difference) {
         if (statusLike == StatusLike.LIKE) {
-            userAdminClient.updateRatingUser(event.getInitiator().getId(), difference);
-            eventAdminClient.updateRatingEvent(event.getId(), difference);
+            restClient.updateRatingUser(event.getInitiator().getId(), difference);
+            restClient.updateRatingEvent(event.getId(), difference);
             event.setLikes(event.getLikes() + difference);
             return event;
         } else if (statusLike == StatusLike.DISLIKE) {
-            userAdminClient.updateRatingUser(event.getInitiator().getId(), difference * -1);
-            eventAdminClient.updateRatingEvent(event.getId(), difference * -1);
+            restClient.updateRatingUser(event.getInitiator().getId(), difference * -1);
+            restClient.updateRatingEvent(event.getId(), difference * -1);
             event.setLikes(event.getLikes() - difference);
             return event;
         }

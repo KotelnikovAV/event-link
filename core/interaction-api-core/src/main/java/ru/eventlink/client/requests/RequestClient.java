@@ -38,5 +38,5 @@ public interface RequestClient {
     @GetMapping("api/v1/users/requests/existence")
     boolean findExistRequests(@RequestParam Long eventId,
                               @RequestParam Long userId,
-                              @RequestParam String status);
+                              @RequestParam Status status);
 }

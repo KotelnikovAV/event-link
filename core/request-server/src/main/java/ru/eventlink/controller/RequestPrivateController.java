@@ -72,7 +72,7 @@ public class RequestPrivateController implements RequestClient {
     @Override
     public boolean findExistRequests(@RequestParam Long eventId,
                                      @RequestParam Long userId,
-                                     @RequestParam String status) {
+                                     @RequestParam Status status) {
         log.info("findExistRequests {}", eventId);
         return requestService.findExistRequests(eventId, userId, status);
     }

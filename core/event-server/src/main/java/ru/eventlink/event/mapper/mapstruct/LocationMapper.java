@@ -1,4 +1,4 @@
-package ru.eventlink.event.mapper;
+package ru.eventlink.event.mapper.mapstruct;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;

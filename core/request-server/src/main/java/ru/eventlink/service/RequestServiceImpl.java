@@ -4,9 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.eventlink.client.UserActionClient;
-import ru.eventlink.client.event.EventAdminClient;
-import ru.eventlink.client.user.UserAdminClient;
+import ru.eventlink.client.GrpcClient;
+import ru.eventlink.client.RestClient;
 import ru.eventlink.dto.event.EventFullDto;
 import ru.eventlink.dto.requests.ParticipationRequestDto;
 import ru.eventlink.enums.State;
@@ -28,15 +27,14 @@ import java.util.Set;
 public class RequestServiceImpl implements RequestService {
     private final RequestsRepository requestsRepository;
     private final RequestMapper requestMapper;
-    private final UserAdminClient userAdminClient;
-    private final EventAdminClient eventAdminClient;
-    private final UserActionClient userActionClient;
+    private final RestClient restClient;
+    private final GrpcClient grpcClient;
 
     @Override
     public List<ParticipationRequestDto> findAllRequestsByUserId(long userId) {
         log.info("The beginning of the process of finding all requests");
 
-        if (!userAdminClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
@@ -56,15 +54,15 @@ public class RequestServiceImpl implements RequestService {
                             "Request with userId " + userId + " eventId " + eventId + " exists");
                 });
 
-        if (!userAdminClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        if (eventAdminClient.findExistEventByEventIdAndInitiatorId(eventId, userId)) {
+        if (restClient.findExistEventByEventIdAndInitiatorId(eventId, userId)) {
             throw new IntegrityViolationException("UserId " + userId + " initiates  eventId " + eventId);
         }
 
-        EventFullDto event = eventAdminClient.findEventById(eventId);
+        EventFullDto event = restClient.findEventById(eventId);
 
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new IntegrityViolationException("Event with id = " + eventId + " is not published");
@@ -90,7 +88,7 @@ public class RequestServiceImpl implements RequestService {
 
         request = requestsRepository.save(request);
 
-        userActionClient.collectUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
+        grpcClient.collectUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
 
         log.info("The request has been created");
         return requestMapper.requestToParticipationRequestDto(request);
@@ -101,7 +99,7 @@ public class RequestServiceImpl implements RequestService {
     public ParticipationRequestDto cancelRequest(long userId, long requestId) {
         log.info("The beginning of the process of canceling a request");
 
-        if (!userAdminClient.getUserExists(userId)) {
+        if (!restClient.getUserExists(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
@@ -136,9 +134,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    public boolean findExistRequests(Long eventId, Long userId, String status) {
+    public boolean findExistRequests(Long eventId, Long userId, Status status) {
         log.info("The beginning of the process of finding exist requests");
-        return requestsRepository.existsByEventIdAndRequesterIdAndStatus(eventId, userId, Status.valueOf(status));
+        return requestsRepository.existsByEventIdAndRequesterIdAndStatus(eventId, userId, status);
     }
 
     @Override

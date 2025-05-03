@@ -1,7 +1,5 @@
 package ru.eventlink.event.mapper;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import ru.eventlink.dto.event.*;
 import ru.eventlink.event.model.Event;
 import ru.eventlink.event.model.Location;
@@ -9,34 +7,16 @@ import ru.eventlink.stats.proto.RecommendedEventProto;
 
 import java.util.List;
 
-@Component
-@RequiredArgsConstructor
-public class Mapper {
-    private final EventMapper eventMapper;
-    private final LocationMapper locationMapper;
-    private final RecommendationsMapper recommendationsMapper;
+public interface Mapper {
+    Event newEventDtoToEvent(NewEventDto newEventDto);
 
-    public Event newEventDtoToEvent(NewEventDto newEventDto) {
-        return eventMapper.newEventDtoToEvent(newEventDto);
-    }
+    EventFullDto eventToEventFullDto(Event event);
 
-    public EventFullDto eventToEventFullDto(Event event) {
-        return eventMapper.eventToEventFullDto(event);
-    }
+    List<EventShortDto> listEventToListEventShortDto(List<Event> events);
 
-    public List<EventShortDto> listEventToListEventShortDto(List<Event> events) {
-        return eventMapper.listEventToListEventShortDto(events);
-    }
+    List<EventFullDto> listEventToListEventFullDto(List<Event> events);
 
-    public List<EventFullDto> listEventToListEventFullDto(List<Event> events) {
-        return eventMapper.listEventToListEventFullDto(events);
-    }
+    Location locationDtoToLocation(LocationDto locationDto);
 
-    public Location locationDtoToLocation(LocationDto locationDto) {
-        return locationMapper.locationDtoToLocation(locationDto);
-    }
-
-    public List<RecommendationsDto> listRecommendedEventProtoToListRecommendationsDto(List<RecommendedEventProto> recommendations) {
-        return recommendationsMapper.listRecommendedEventProtoToListRecommendationsDto(recommendations);
-    }
+    List<RecommendationsDto> listRecommendedEventProtoToListRecommendationsDto(List<RecommendedEventProto> recommendations);
 }

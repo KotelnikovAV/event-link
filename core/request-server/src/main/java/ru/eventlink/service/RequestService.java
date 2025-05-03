@@ -18,7 +18,7 @@ public interface RequestService {
 
     List<ParticipationRequestDto> updateRequest(Set<Long> requestsId, Status status);
 
-    boolean findExistRequests(Long eventId, Long userId, String status);
+    boolean findExistRequests(Long eventId, Long userId, Status status);
 
     List<ParticipationRequestDto> findAllRequestsByEventIdAndStatus(Long eventId, Status status);
 }
