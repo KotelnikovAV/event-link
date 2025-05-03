@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +16,7 @@ import ru.eventlink.exception.*;
 import ru.eventlink.exception.model.ApiError;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -152,5 +154,34 @@ public class ExceptionController {
                 .timestamp(LocalDateTime.now())
                 .errors(ExceptionUtils.getStackTrace(e))
                 .build();
+    }
+
+    @ExceptionHandler(CompletionException.class)
+    public ResponseEntity<ApiError> handleCompletionException(CompletionException e) {
+        Throwable cause = e.getCause();
+        switch (cause) {
+            case IntegrityViolationException integrityViolationException -> {
+                ApiError apiError = handleIntegrityViolationException(integrityViolationException);
+                return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
+            }
+            case NotFoundException notFoundException -> {
+                ApiError apiError = handleNotFoundException(notFoundException);
+                return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+            }
+            case RestrictionsViolationException restrictionsViolationException -> {
+                ApiError apiError = handleRestrictionsViolationException(restrictionsViolationException);
+                return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
+            }
+            case null, default -> {
+                ApiError apiError = ApiError.builder()
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR.name())
+                        .reason("INTERNAL_SERVER_ERROR")
+                        .message(e.getMessage())
+                        .timestamp(LocalDateTime.now())
+                        .errors(ExceptionUtils.getStackTrace(e))
+                        .build();
+                return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
     }
 }

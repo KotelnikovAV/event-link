@@ -28,6 +28,9 @@ import ru.eventlink.stats.proto.RecommendedEventProto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static ru.eventlink.event.model.QEvent.event;
 import static ru.eventlink.utility.Constants.MAXIMUM_SIZE_OF_THE_RECOMMENDATION_LIST;
@@ -39,6 +42,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
     private final CategoryRepository categoryRepository;
     private final Mapper mapper;
     private final RestClient restClient;
+    private final Executor asyncExecutor = Executors.newFixedThreadPool(2);
 
     public EventPrivateServiceImpl(EventRepository eventRepository,
                                    CategoryRepository categoryRepository,
@@ -209,13 +213,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
     public List<ParticipationRequestDto> findRequestByEventId(long userId, long eventId) {
         log.info("The beginning of the process of finding a requests");
 
-        if (!restClient.getUserExists(userId)) {
-            throw new NotFoundException("User with id=" + userId + " was not found");
-        }
-
-        if (!eventRepository.existsById(eventId)) {
-            throw new NotFoundException("Event with id=" + eventId + " was not found");
-        }
+        checkUserAndEvent(userId, eventId);
 
         List<ParticipationRequestDto> requests = restClient.findAllRequestsByEventId(eventId, null);
 
@@ -287,5 +285,21 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
         resultDto.setConfirmedRequests(confirmedRequests);
         resultDto.setRejectedRequests(rejectedRequests);
         return resultDto;
+    }
+
+    private void checkUserAndEvent(long userId, long eventId) {
+        CompletableFuture<Boolean> userExistsFuture = CompletableFuture.supplyAsync(
+                () -> restClient.getUserExists(userId), asyncExecutor
+        );
+
+        CompletableFuture<Boolean> eventExistsFuture = CompletableFuture.supplyAsync(
+                () -> eventRepository.existsById(eventId), asyncExecutor
+        );
+
+        userExistsFuture.thenCombine(eventExistsFuture, (userExist, eventExist) -> {
+            if (!userExist) throw new NotFoundException("User with id=" + userId + " was not found");
+            if (!eventExist) throw new NotFoundException("Event with id=" + eventId + " was not found");
+            return null;
+        }).join();
     }
 }

@@ -16,6 +16,9 @@ import ru.eventlink.repository.LikeRepository;
 import ru.eventlink.stats.proto.ActionTypeProto;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static ru.eventlink.utility.Constants.*;
 
@@ -26,21 +29,16 @@ public class LikeServiceImpl implements LikeService {
     private final LikeRepository likeRepository;
     private final RestClient restClient;
     private final GrpcClient grpcClient;
+    private final Executor asyncExecutor = Executors.newFixedThreadPool(2);
 
     @Override
     @Transactional
     public EventFullDto addLike(long eventId, long userId, StatusLike statusLike) {
         log.info("The beginning of the process of adding like to an event");
 
-        if (!restClient.getUserExists(userId)) {
-            throw new NotFoundException("User with id=" + userId + " was not found");
-        }
+        checkUserAndRequest(eventId, userId);
 
         EventFullDto event = restClient.findEventById(eventId);
-
-        if (!restClient.findExistRequests(eventId, userId, Status.CONFIRMED)) {
-            throw new RestrictionsViolationException("In order to like, you must be a participant in the event");
-        }
 
         if (likeRepository.existsByEventIdAndUserId(eventId, userId)) {
             throw new RestrictionsViolationException("You have already rated this event");
@@ -118,5 +116,21 @@ public class LikeServiceImpl implements LikeService {
             return event;
         }
         return null;
+    }
+
+    private void checkUserAndRequest(long eventId, long userId) {
+        CompletableFuture<Boolean> userExistsFuture = CompletableFuture.supplyAsync(
+                () -> restClient.getUserExists(userId), asyncExecutor
+        );
+
+        CompletableFuture<Boolean> requestExistsFuture = CompletableFuture.supplyAsync(
+                () -> restClient.findExistRequests(eventId, userId, Status.CONFIRMED), asyncExecutor
+        );
+
+        userExistsFuture.thenCombine(requestExistsFuture, (userExist, requestExist) -> {
+            if (!userExist) throw new NotFoundException("User with id=" + userId + " was not found");
+            if (!requestExist) throw new RestrictionsViolationException("In order to like, you must be a participant in the event");
+            return null;
+        }).join();
     }
 }

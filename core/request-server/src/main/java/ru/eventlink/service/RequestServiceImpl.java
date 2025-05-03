@@ -20,6 +20,9 @@ import ru.eventlink.stats.proto.ActionTypeProto;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,7 @@ public class RequestServiceImpl implements RequestService {
     private final RequestMapper requestMapper;
     private final RestClient restClient;
     private final GrpcClient grpcClient;
+    private final Executor asyncExecutor = Executors.newFixedThreadPool(2);
 
     @Override
     public List<ParticipationRequestDto> findAllRequestsByUserId(long userId) {
@@ -54,13 +58,7 @@ public class RequestServiceImpl implements RequestService {
                             "Request with userId " + userId + " eventId " + eventId + " exists");
                 });
 
-        if (!restClient.getUserExists(userId)) {
-            throw new NotFoundException("User with id=" + userId + " was not found");
-        }
-
-        if (restClient.findExistEventByEventIdAndInitiatorId(eventId, userId)) {
-            throw new IntegrityViolationException("UserId " + userId + " initiates  eventId " + eventId);
-        }
+        checkUserAndEvent(userId, eventId);
 
         EventFullDto event = restClient.findEventById(eventId);
 
@@ -157,5 +155,21 @@ public class RequestServiceImpl implements RequestService {
 
         log.info("The all requests has been found");
         return requestMapper.listRequestToListParticipationRequestDto(requests);
+    }
+
+    private void checkUserAndEvent(long userId, long eventId) {
+        CompletableFuture<Boolean> userExistsFuture = CompletableFuture.supplyAsync(
+                () -> restClient.getUserExists(userId), asyncExecutor
+        );
+
+        CompletableFuture<Boolean> eventExistsFuture = CompletableFuture.supplyAsync(
+                () -> restClient.findExistEventByEventIdAndInitiatorId(eventId, userId), asyncExecutor
+        );
+
+        userExistsFuture.thenCombine(eventExistsFuture, (userExist, eventExist) -> {
+            if (!userExist) throw new NotFoundException("User with id=" + userId + " was not found");
+            if (eventExist) throw new IntegrityViolationException("UserId " + userId + " initiates eventId " + eventId);
+            return null;
+        }).join();
     }
 }
