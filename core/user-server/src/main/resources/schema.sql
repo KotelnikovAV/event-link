@@ -7,7 +7,8 @@ create table if not exists users
     name                VARCHAR(255)    NOT NULL,
     rating              INTEGER         NOT NULL,
     count_followers     INTEGER         NOT NULL,
-    count_friends       INTEGER         NOT NULL
+    count_friends       INTEGER         NOT NULL,
+    version             INTEGER         NOT NULL
 );
 
 create table if not exists friends

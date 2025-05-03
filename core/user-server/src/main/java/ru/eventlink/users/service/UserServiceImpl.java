@@ -1,9 +1,12 @@
 package ru.eventlink.users.service;
 
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -87,6 +90,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Retryable(
+            retryFor = OptimisticLockException.class,
+            backoff = @Backoff(delay = 150, multiplier = 1.5)
+    )
     @Transactional
     public void updateRatingUser(long userId, int rating) {
         log.info("The beginning of the process of updating a user");

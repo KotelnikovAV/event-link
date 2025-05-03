@@ -6,5 +6,5 @@ create table if not exists likes
     event_id   bigint       NOT NULL,
     user_id    bigint       NOT NULL,
     status     varchar(8)   NOT NULL,
-    created    TIMESTAMP
+    created    TIMESTAMP    NOT NULL
 );

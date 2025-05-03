@@ -106,6 +106,10 @@ public class RequestServiceImpl implements RequestService {
         Request request = requestsRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Request with id = " + requestId + " not found"));
 
+        if (request.getStatus().equals(Status.CANCELED)) {
+            requestMapper.requestToParticipationRequestDto(request);
+        }
+
         request.setStatus(Status.CANCELED);
         log.info("The request has been canceled");
         return requestMapper.requestToParticipationRequestDto(request);

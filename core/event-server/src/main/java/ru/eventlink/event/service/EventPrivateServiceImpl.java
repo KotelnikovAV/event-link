@@ -151,7 +151,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
         if (event.getState().equals(State.PUBLISHED)) {
@@ -234,7 +234,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
         if (event.getParticipantLimit() != 0 && event.getParticipantLimit().equals(event.getConfirmedRequests())) {
