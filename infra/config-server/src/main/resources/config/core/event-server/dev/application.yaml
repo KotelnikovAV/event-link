@@ -16,6 +16,11 @@ spring:
     url: jdbc:postgresql://localhost:5432/event-server
     username: root
     password: root
+  cache:
+    type: caffeine
+    cache-names: fullEvents, shortEvents, listShortEvents
+    caffeine:
+      spec: maximumSize=500, expireAfterAccess=1h
   cloud:
     openfeign:
       circuitbreaker:

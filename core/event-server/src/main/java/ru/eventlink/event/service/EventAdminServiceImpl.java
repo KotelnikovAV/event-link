@@ -2,6 +2,9 @@ package ru.eventlink.event.service;
 
 import com.querydsl.core.BooleanBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -34,15 +37,18 @@ public class EventAdminServiceImpl extends EventService implements EventAdminSer
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final Mapper mapper;
+    private final CacheManager cacheManager;
 
     public EventAdminServiceImpl(EventRepository eventRepository,
                                  CategoryRepository categoryRepository,
                                  Mapper mapper,
-                                 GrpcClient grpcClient) {
+                                 GrpcClient grpcClient,
+                                 CacheManager cacheManager) {
         super(grpcClient);
         this.eventRepository = eventRepository;
         this.categoryRepository = categoryRepository;
         this.mapper = mapper;
+        this.cacheManager = cacheManager;
     }
 
     @Override
@@ -98,6 +104,7 @@ public class EventAdminServiceImpl extends EventService implements EventAdminSer
 
     @Transactional
     @Override
+    @CacheEvict(value = {"fullEvents", "shortEvents", "listShortEvents"}, allEntries = true)
     public EventFullDto updateEventAdmin(UpdateEventAdminRequest updateEvent, long eventId) {
         log.info("The beginning of the process of updates a event by admin");
 
@@ -154,6 +161,7 @@ public class EventAdminServiceImpl extends EventService implements EventAdminSer
     }
 
     @Override
+    @Cacheable(value = "fullEvents")
     public EventFullDto findEventById(Long eventId) {
         log.info("The beginning of the process of finding state events");
         Event event = eventRepository.findById(eventId)
@@ -171,6 +179,7 @@ public class EventAdminServiceImpl extends EventService implements EventAdminSer
 
     @Override
     @Transactional
+    @CacheEvict(value = {"fullEvents", "shortEvents", "listShortEvents"}, allEntries = true)
     public void updateRatingEvent(Long eventId, int rating) {
         log.info("The beginning of the process of updating rating");
         Event event = eventRepository.findById(eventId)

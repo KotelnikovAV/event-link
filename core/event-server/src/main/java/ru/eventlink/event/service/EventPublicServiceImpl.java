@@ -2,6 +2,7 @@ package ru.eventlink.event.service;
 
 import com.querydsl.core.BooleanBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -83,6 +84,7 @@ public class EventPublicServiceImpl extends EventService implements EventPublicS
     }
 
     @Override
+    @Cacheable(value = "fullEvents", key = "'public event id: ' + #id")
     public EventFullDto findPublicEventById(long id) {
         log.info("The beginning of the process of finding a event by public");
 

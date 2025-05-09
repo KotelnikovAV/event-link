@@ -2,6 +2,8 @@ package ru.eventlink.event.service;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -103,6 +105,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
     }
 
     @Override
+    @Cacheable(value = "fullEvents", key = "{#userId, #eventId}")
     public EventFullDto findEventByUserIdAndEventId(long userId, long eventId) {
         log.info("The beginning of the process of finding a event");
 
@@ -123,6 +126,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
     }
 
     @Override
+    @Cacheable(value = "listShortEvents", key = "{#userId, #page, #size}")
     public List<EventShortDto> findEventsByUser(long userId, int page, int size) {
         log.info("The beginning of the process of finding a events");
 
@@ -149,6 +153,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
 
     @Transactional
     @Override
+    @CacheEvict(value = {"fullEvents", "shortEvents", "listShortEvents"}, allEntries = true)
     public EventFullDto updateEvent(UpdateEventUserRequest updateEvent, long userId, long eventId) {
         log.info("The beginning of the process of updates a event");
 
