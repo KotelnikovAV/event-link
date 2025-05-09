@@ -17,6 +17,9 @@ import ru.eventlink.like.service.LikeCommentService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Service
 @Slf4j
@@ -24,6 +27,7 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
     private final LikeCommentService likeCommentService;
     private final LikeCommentConfig likeCommentConfig;   
     private final RestClient restClient;
+    private final Executor asyncExecutor;
 
     public CommentPrivateServiceImpl(CommentRepository commentRepository,
                                      CommentMapper commentMapper,
@@ -34,13 +38,14 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
         this.likeCommentService = likeCommentService;
         this.likeCommentConfig = likeCommentConfig;
         this.restClient = restClient;
+        this.asyncExecutor = Executors.newFixedThreadPool(2);
     }
 
     @Override
     public CommentDto addComment(Long userId, Long eventId, RequestCommentDto commentDto) {
         log.info("Adding comment");
 
-        restClient.checkUserAndEventExists(userId, eventId);
+        checkUserAndEventExists(userId, eventId);
 
         Comment comment = commentMapper.requestCommentDtoToComment(commentDto);
         comment.setCountResponse(0);
@@ -56,7 +61,9 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
     public CommentDto updateComment(Long userId, String commentId, UpdateCommentDto updateCommentDto) {
         log.info("Updating comment");
 
-        restClient.checkUserAndEventExists(userId, null);
+        if (!restClient.getUserExists(userId)) {
+            throw new NotFoundException("User with id =" + userId + " was not found");
+        }
 
         Comment comment = commentRepository.findById(new ObjectId(commentId))
                 .orElseThrow(() -> new NotFoundException("Comment " + commentId + " not found"));
@@ -73,7 +80,9 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
     public CommentDto addSubComment(Long userId, String parentCommentId, RequestCommentDto commentDto) {
         log.info("Adding sub comment");
 
-        restClient.checkUserAndEventExists(userId, null);
+        if (!restClient.getUserExists(userId)) {
+            throw new NotFoundException("User with id =" + userId + " was not found");
+        }
 
         ObjectId id = new ObjectId(parentCommentId);
 
@@ -96,7 +105,9 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
     public CommentDto deleteComment(Long userId, String commentId) {
         log.info("Deleting comment");
 
-        restClient.checkUserAndEventExists(userId, null);
+        if (!restClient.getUserExists(userId)) {
+            throw new NotFoundException("User with id =" + userId + " was not found");
+        }
 
         Comment comment = commentRepository.findById(new ObjectId(commentId))
                 .orElseThrow(() -> new NotFoundException("Comment " + commentId + " not found"));
@@ -112,7 +123,9 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
     public void addLike(String commentId, Long authorId) {
         log.info("Adding like");
 
-        restClient.checkUserAndEventExists(authorId, null);
+        if (!restClient.getUserExists(authorId)) {
+            throw new NotFoundException("User with id =" + authorId + " was not found");
+        }
 
         ObjectId id = new ObjectId(commentId);
         likeCommentService.addLike(id, authorId);
@@ -140,7 +153,9 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
     public void deleteLike(String commentId, Long authorId) {
         log.info("Deleting like");
 
-        restClient.checkUserAndEventExists(authorId, null);
+        if (!restClient.getUserExists(authorId)) {
+            throw new NotFoundException("User with id =" + authorId + " was not found");
+        }
 
         ObjectId id = new ObjectId(commentId);
         likeCommentService.deleteLike(id, authorId);
@@ -157,5 +172,21 @@ public class CommentPrivateServiceImpl extends CommentService implements Comment
 
         commentRepository.save(comment);
         log.info("Deleted like");
+    }
+
+    private void checkUserAndEventExists(long userId, long eventId) {
+        CompletableFuture<Boolean> userExistsFuture = CompletableFuture.supplyAsync(
+                () -> restClient.getUserExists(userId), asyncExecutor
+        );
+
+        CompletableFuture<Boolean> eventExistsFuture = CompletableFuture.supplyAsync(
+                () -> restClient.getEventExists(userId), asyncExecutor
+        );
+
+        userExistsFuture.thenCombine(eventExistsFuture, (userExist, eventExist) -> {
+            if (!userExist) throw new NotFoundException("User with id =" + userId + " was not found");
+            if (!eventExist) throw new NotFoundException("Event with id =" + eventId + " was not found");
+            return null;
+        }).join();
     }
 }

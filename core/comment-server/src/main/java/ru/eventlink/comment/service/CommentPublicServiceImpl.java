@@ -9,6 +9,7 @@ import ru.eventlink.comment.repository.CommentRepository;
 import ru.eventlink.dto.comment.CommentDto;
 import ru.eventlink.dto.user.UserDto;
 import ru.eventlink.enums.CommentSort;
+import ru.eventlink.exception.NotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,9 @@ public class CommentPublicServiceImpl extends CommentService implements CommentP
     public List<CommentDto> findAllCommentsByEventId(Long eventId, CommentSort commentSort, int page, int size) {
         log.info("Finding all comments by event id {}", eventId);
 
-        restClient.checkUserAndEventExists(null, eventId);
+        if (!restClient.getEventExists(eventId)) {
+            throw new NotFoundException("User with id =" + eventId + " was not found");
+        }
 
         List<Comment> comments = commentRepository
                 .findByEventId(eventId, getPageRequest(page, size, commentSort))

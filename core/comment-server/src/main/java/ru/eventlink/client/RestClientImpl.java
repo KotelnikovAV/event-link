@@ -34,15 +34,9 @@ public class RestClientImpl implements RestClient {
     private final EventAdminClient eventAdminClient;
 
     @Override
-    public void checkUserAndEventExists(Long userId, Long eventId) {
-        log.info("Calling the User and/or Event Service");
-        if (userId != null && !userAdminClient.getUserExists(userId)) {
-            throw new NotFoundException("User with id =" + userId + " was not found");
-        }
-
-        if (eventId != null && !eventAdminClient.findExistEventByEventId(eventId)) {
-            throw new NotFoundException("Event with id =" + eventId + " was not found");
-        }
+    public boolean getEventExists(Long eventId) {
+        log.info("Calling the Event Service");
+        return eventAdminClient.findExistEventByEventId(eventId);
     }
 
     @Override

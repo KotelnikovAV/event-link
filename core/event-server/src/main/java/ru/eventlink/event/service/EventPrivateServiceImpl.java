@@ -42,7 +42,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
     private final CategoryRepository categoryRepository;
     private final Mapper mapper;
     private final RestClient restClient;
-    private final Executor asyncExecutor = Executors.newFixedThreadPool(2);
+    private final Executor asyncExecutor;
 
     public EventPrivateServiceImpl(EventRepository eventRepository,
                                    CategoryRepository categoryRepository,
@@ -54,6 +54,7 @@ public class EventPrivateServiceImpl extends EventService implements EventPrivat
         this.categoryRepository = categoryRepository;
         this.mapper = mapper;
         this.restClient = restClient;
+        this.asyncExecutor = Executors.newFixedThreadPool(2);
     }
 
     @Transactional

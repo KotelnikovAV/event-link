@@ -5,7 +5,7 @@ import ru.eventlink.dto.user.UserDto;
 import java.util.List;
 
 public interface RestClient {
-    void checkUserAndEventExists(Long userId, Long eventId);
+    boolean getEventExists(Long userId);
 
     List<UserDto> getAllUsers(List<Long> usersId, int page, int pageSize);
 
